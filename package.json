@@ -1,0 +1,16 @@
+{
+  "name": "nodecraft",
+  "version": "1.0.0",
+  "description": "minecraft server",
+  "main": "server.js",
+  "dependencies": {},
+  "devDependencies": {
+    "javascript-state-machine": "^3.1.0"
+  },
+  "scripts": {
+    "test": "node server.js",
+    "start": "node server.js"
+  },
+  "author": "Duncan Uszkay",
+  "license": "MIT"
+}

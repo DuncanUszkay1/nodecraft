@@ -1,11 +1,24 @@
-class BufferIterator{
+function lengthPrefixedStringBuffer(str) {
+    var strLengthBuffer = Buffer.alloc(1);
+    strLengthBuffer[0] = str.length
+    var strBuffer = Buffer.from(str)
+    return Buffer.concat([strLengthBuffer, strBuffer])
+}
+
+function varIntBuffer(value) {
+  var bi = new BufferIterator(Buffer.alloc(varIntSizeOf(str.length)));
+  bi.writeVarInt(str.length);
+  return bi.b
+}
+
+class BufferIterator {
   constructor(buffer) {
     this.b = buffer
     this.i = 0
   }
 
   readByte() {
-    if(this.i >= this.b.length){
+    if(this.empty()){
       throw new Error("Buffer is empty")
     }
     var result = this.b[this.i]
@@ -14,7 +27,7 @@ class BufferIterator{
   }
 
   writeByte(data) {
-    if(this.i >= this.b.length){
+    if(this.empty()){
       throw new Error("Buffer too small")
     }
     this.b[this.i] = data
@@ -51,11 +64,35 @@ class BufferIterator{
 
   readByteArray() {
     var result = []
-    while(this.i < this.b.length){
+    while(!this.empty()){
       result.push(this.readByte());
     }
     return result
   }
+
+  readString(len) {
+    var result = []
+    for(var i = 0; i < len; i++){
+      result.push(this.readByte())
+    }
+    return Buffer.from(result).toString()
+  }
+
+
+  tail() {
+    if(this.empty()){
+      return Buffer.alloc(0)
+    }
+    return this.b.slice(this.i)
+  }
+
+  empty() {
+    return this.i >= this.b.length
+  }
 }
 
-module.exports = BufferIterator;
+module.exports = {
+  BufferIterator: BufferIterator,
+  lengthPrefixedStringBuffer: lengthPrefixedStringBuffer,
+  varIntBuffer: varIntBuffer
+}

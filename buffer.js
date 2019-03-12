@@ -11,6 +11,18 @@ function varIntBuffer(value) {
   return bi.b
 }
 
+function intBuffer(value) {
+  var b = Buffer.alloc(4)
+  b.writeInt32BE(value)
+  return b
+}
+
+function unsignedByteBuffer(value) {
+  var b = Buffer.alloc(1)
+  b.writeUInt8(value)
+  return b
+}
+
 class BufferIterator {
   constructor(buffer) {
     this.b = buffer
@@ -94,5 +106,7 @@ class BufferIterator {
 module.exports = {
   BufferIterator: BufferIterator,
   lengthPrefixedStringBuffer: lengthPrefixedStringBuffer,
+  intBuffer: intBuffer,
+  unsignedByteBuffer: unsignedByteBuffer,
   varIntBuffer: varIntBuffer
 }

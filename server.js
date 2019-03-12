@@ -9,6 +9,7 @@ const Packet = require('./packet.js');
 const Handshake = require('./packets/serverbound/handshake.js');
 const LoginStart = require('./packets/serverbound/loginStart.js');
 const LoginSuccess = require('./packets/clientbound/loginSuccess.js');
+const JoinGame = require('./packets/clientbound/joinGame.js');
 //const initConnState = require('./connection.js');
 
 const sample_status = `{
@@ -72,6 +73,8 @@ server.on('connection', socket => {
           log(`User ${loginStart.username} is logging in...`)
           var loginSuccess = new LoginSuccess(loginStart.username)
           socket.write(loginSuccess.loadIntoBuffer())
+          var joinGame = new JoinGame(loginStart.username)
+          socket.write(joinGame.loadIntoBuffer())
           state = 3
           break;
         default:

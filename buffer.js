@@ -1,8 +1,8 @@
 function lengthPrefixedStringBuffer(str) {
-    var strLengthBuffer = Buffer.alloc(1);
-    strLengthBuffer[0] = str.length
-    var strBuffer = Buffer.from(str)
-    return Buffer.concat([strLengthBuffer, strBuffer])
+  var strLengthBufferIterator = new BufferIterator(Buffer.alloc(varIntSizeOf(str.length)));
+  strLengthBufferIterator.writeVarInt(str.length)
+  var strBuffer = Buffer.from(str)
+  return Buffer.concat([strLengthBufferIterator.b, strBuffer])
 }
 
 function varIntBuffer(value) {
@@ -21,6 +21,10 @@ function unsignedByteBuffer(value) {
   var b = Buffer.alloc(1)
   b.writeUInt8(value)
   return b
+}
+
+function varIntSizeOf(x) {
+    return x < 2 ? 1 : Math.ceil(Math.log2(x)/7);
 }
 
 class BufferIterator {

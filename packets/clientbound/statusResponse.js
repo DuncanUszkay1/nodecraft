@@ -2,7 +2,7 @@ const Packet = require('../../packet.js');
 const BufferHelpers= require('../../buffer.js');
 const lengthPrefixedStringBuffer = BufferHelpers.lengthPrefixedStringBuffer;
 
-class LoginSuccess extends Packet {
+class StatusResponse extends Packet {
   constructor(serverStatus){
     super()
     this.packetID = 0
@@ -11,4 +11,4 @@ class LoginSuccess extends Packet {
   }
 }
 
-module.exports = LoginSuccess
+module.exports = StatusResponse

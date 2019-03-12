@@ -9,10 +9,10 @@ const Packet = require('./packet.js');
 const Handshake = require('./packets/serverbound/handshake.js');
 const LoginStart = require('./packets/serverbound/loginStart.js');
 const LoginSuccess = require('./packets/clientbound/loginSuccess.js');
+const StatusResponse = require('./packets/clientbound/statusResponse.js');
 const JoinGame = require('./packets/clientbound/joinGame.js');
-//const initConnState = require('./connection.js');
 
-const sample_status = `{
+const sampleStatus = `{
     "version": {
         "name": "1.13.2",
         "protocol": 404
@@ -48,7 +48,7 @@ server.on('connection', socket => {
         case 0:
           var handshake = new Handshake(packet)
           state = handshake.nextState
-          console.log(`handshake with state ${state}`)
+          log(`handshake with state ${state}`)
           break;
         default:
           log(`unexpected packet id ${packet.packetID}`)
@@ -56,7 +56,8 @@ server.on('connection', socket => {
     } else if(state == 1) { //PostStatusHandshake
       switch(packet.packetID) {
         case 0:
-          var statusResponse = new StatusResponse(sample_status)
+          var statusResponse = new StatusResponse(sampleStatus)
+          log(`sending status..`)
           socket.write(statusResponse.loadIntoBuffer())
           break;
         case 1:
@@ -82,7 +83,7 @@ server.on('connection', socket => {
           break;
       }
     } else { //Play
-      log('play packet')
+      log(`play packet with id ${packet.packetID}`)
     }
   });
 });

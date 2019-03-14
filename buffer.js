@@ -130,8 +130,9 @@ class BufferIterator {
     return result
   }
 
-  readString(len) {
+  readString() {
     var result = []
+    var len = this.readByte()
     for(var i = 0; i < len; i++){
       result.push(this.readByte())
     }

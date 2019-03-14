@@ -4,7 +4,7 @@ const BufferIterator = BufferHelpers.BufferIterator;
 class LoginStart {
   constructor(packet){
     var bi = new BufferIterator(Buffer.from(packet.dataBuffer))
-    this.username = bi.readString(16)
+    this.username = bi.readString()
   }
 }
 

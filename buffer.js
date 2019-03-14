@@ -1,14 +1,37 @@
+var Int64BE = require("int64-buffer").Int64BE;
+
+const blockBits = 14
+
 function lengthPrefixedStringBuffer(str) {
-  var strLengthBufferIterator = new BufferIterator(Buffer.alloc(varIntSizeOf(str.length)));
-  strLengthBufferIterator.writeVarInt(str.length)
+  var strLengthBuffer = varIntBuffer(str.length);
   var strBuffer = Buffer.from(str)
-  return Buffer.concat([strLengthBufferIterator.b, strBuffer])
+  return Buffer.concat([strLengthBuffer, strBuffer])
+}
+
+function positionBuffer(x,y,z) {
+  return (new Int64BE(((x & 0x3FFFFFF) << 38) | ((y & 0xFFF) << 26) | (z & 0x3FFFFFF))).toBuffer()
 }
 
 function varIntBuffer(value) {
-  var bi = new BufferIterator(Buffer.alloc(varIntSizeOf(str.length)));
-  bi.writeVarInt(str.length);
+  var bi = new BufferIterator(Buffer.alloc(varIntSizeOf(value)));
+  bi.writeVarInt(value);
   return bi.b
+}
+
+function arrayBuffer(values, f){
+  return Buffer.concat(values.map(v => f(v)))
+}
+
+function floatBuffer(value) {
+  var b = Buffer.alloc(4)
+  b.writeFloatBE(value, 0)
+  return b
+}
+
+function doubleBuffer(value) {
+  var b = Buffer.alloc(8)
+  b.writeDoubleBE(value, 0)
+  return b
 }
 
 function intBuffer(value) {
@@ -78,6 +101,27 @@ class BufferIterator {
     } while (value != 0);
   }
 
+  writeBlocks(values) {
+    if(values.length % 64 != 0){
+      throw new Error(`Size of value array must be divisible by 64`)
+    }
+    var nextByte = 0
+    var remainingBits = 8
+    var bitsWritten = 0
+    for(var i = 0; i < values.length; i++) {
+      for(var j = 0; j < blockBits; j++) {
+        nextByte = (nextByte << 1) + ((values[i] & (0b1 << j)) >> j)
+        remainingBits--
+        if(remainingBits == 0) {
+          bitsWritten++
+          this.writeByte(nextByte)
+          nextByte = 0
+          remainingBits = 8
+        }
+      }
+    }
+  }
+
   readByteArray() {
     var result = []
     while(!this.empty()){
@@ -112,5 +156,9 @@ module.exports = {
   lengthPrefixedStringBuffer: lengthPrefixedStringBuffer,
   intBuffer: intBuffer,
   unsignedByteBuffer: unsignedByteBuffer,
-  varIntBuffer: varIntBuffer
+  varIntBuffer: varIntBuffer,
+  positionBuffer: positionBuffer,
+  doubleBuffer: doubleBuffer,
+  floatBuffer: floatBuffer,
+  arrayBuffer: arrayBuffer
 }

@@ -37,21 +37,20 @@ function log(str) {
 
 server.on('connection', socket => {
   var state = 0
-  socket.on('close', err => {
-    if(err){ log('socket closed due to error') } else { log('socket closed') }
-  })
-  socket.on('error', err => {
-    console.log(err)
-  })
-  socket.on('data', data => {
+
+  function socketData(data) {
     packet = new Packet();
-    packet.loadFromBuffer(data);
+    packet.loadFromBuffer(data)
+    log(`received id: ${packet.packetID} in state: ${state}`)
     if(state == 0) { //PreHandshake
       switch(packet.packetID) {
         case 0:
           var handshake = new Handshake(packet)
           state = handshake.nextState
           log(`handshake with state ${state}`)
+          if (handshake.leftoverData != null) {
+            socketData(handshake.leftoverData)
+          } 
           break;
         default:
           log(`state 3: unexpected packet id ${packet.packetID}`)
@@ -108,6 +107,16 @@ server.on('connection', socket => {
     } else { //Play
       //log(`play packet with id ${packet.packetID}`)
     }
+  }
+
+  socket.on('close', err => {
+    if(err){ log('socket closed due to error') } else { log('socket closed') }
+  })
+  socket.on('error', err => {
+    console.log(err)
+  })
+  socket.on('data', data => {
+    socketData(data)
   });
 });
 

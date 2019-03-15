@@ -14,6 +14,7 @@ const SpawnPosition = require('./packets/clientbound/spawnPosition.js');
 const PlayerPosition = require('./packets/clientbound/playerPosition.js');
 const ChunkData = require('./packets/clientbound/chunkData.js');
 const JoinGame = require('./packets/clientbound/joinGame.js');
+const KeepAlive = require('./packets/clientbound/keepAlive.js');
 
 const sampleStatus = `{
     "version": {
@@ -37,6 +38,13 @@ function log(str) {
 
 server.on('connection', socket => {
   var state = 0
+  var keepAliveInterval
+  var keepAlivePacket
+
+  function keepAlive() {
+    keepAlivePacket = new KeepAlive()
+    socket.write(keepAlivePacket.loadIntoBuffer());
+  }
 
   function socketData(data) {
     Packet.loadFromBuffer(data).forEach(packet => {
@@ -46,9 +54,6 @@ server.on('connection', socket => {
             var handshake = new Handshake(packet)
             state = handshake.nextState
             log(`handshake with state ${state}`)
-            if (handshake.leftoverData != null) {
-              socketData(handshake.leftoverData)
-            } 
             break;
           default:
             log(`state 3: unexpected packet id ${packet.packetID}`)
@@ -87,6 +92,7 @@ server.on('connection', socket => {
             var playerPosition = new PlayerPosition(0,30,0,0,0)
             socket.write(playerPosition.loadIntoBuffer())
             state = 4
+            keepAliveInterval = setInterval(keepAlive, 1000)
             break;
           default:
             log(`state 2: unexpected packet id ${packet.packetID}`)
@@ -103,12 +109,21 @@ server.on('connection', socket => {
             break;
         }
       } else { //Play
+        switch(packet.packetID) {
+          case 0x0E:
+            if (!packet.dataEquals(keepAlivePacket)) {
+              log(`not equal`)
+            }
+            log(`equal`)
+            break;
+        }
         //log(`play packet with id ${packet.packetID}`)
       }
     });
   }
 
   socket.on('close', err => {
+    clearInterval(keepAliveInterval)
     if(err){ log('socket closed due to error') } else { log('socket closed') }
   })
   socket.on('error', err => {

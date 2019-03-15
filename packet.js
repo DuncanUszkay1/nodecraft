@@ -48,6 +48,14 @@ class Packet {
       this.dataBuffer
     ]);
   }
+
+  dataEquals(otherPacket) {
+    if (this.length != otherPacket.length) {
+      return false;
+    }
+    
+    return this.dataBuffer.equals(otherPacket.dataBuffer)
+  }
 }
 
 module.exports = Packet

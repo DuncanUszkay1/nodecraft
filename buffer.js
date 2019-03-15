@@ -140,11 +140,13 @@ class BufferIterator {
   }
 
 
-  tail() {
+  tail(upTo) {
     if(this.empty()){
       return Buffer.alloc(0)
     }
-    return this.b.slice(this.i)
+    var result = this.b.slice(this.i, upTo)
+    this.i = upTo
+    return result
   }
 
   empty() {

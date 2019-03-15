@@ -1,5 +1,6 @@
 const BufferHelpers = require('../../buffer.js');
 const BufferIterator = BufferHelpers.BufferIterator;
+const Packet = require('../../packet.js');
 
 class Handshake {
   constructor(packet){

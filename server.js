@@ -39,11 +39,13 @@ function log(str) {
 server.on('connection', socket => {
   var state = 0
   var keepAliveInterval
+  var keepAliveTimeout
   var keepAlivePacket
 
   function keepAlive() {
     keepAlivePacket = new KeepAlive()
     socket.write(keepAlivePacket.loadIntoBuffer());
+    keepAliveTimeout = setTimeout(socket.destroy, 30000)
   }
 
   function socketData(data) {
@@ -92,7 +94,7 @@ server.on('connection', socket => {
             var playerPosition = new PlayerPosition(0,30,0,0,0)
             socket.write(playerPosition.loadIntoBuffer())
             state = 4
-            keepAliveInterval = setInterval(keepAlive, 1000)
+            keepAliveInterval = setInterval(keepAlive, 15000)
             break;
           default:
             log(`state 2: unexpected packet id ${packet.packetID}`)
@@ -112,9 +114,9 @@ server.on('connection', socket => {
         switch(packet.packetID) {
           case 0x0E:
             if (!packet.dataEquals(keepAlivePacket)) {
-              log(`not equal`)
+              socket.destroy()
             }
-            log(`equal`)
+            clearTimeout(keepAliveTimeout)
             break;
         }
         //log(`play packet with id ${packet.packetID}`)

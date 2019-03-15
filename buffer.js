@@ -103,23 +103,21 @@ class BufferIterator {
     if(values.length % 64 != 0){
       throw new Error(`Size of value array must be divisible by 64`)
     }
-    var b = 0
-    var br = 8
-    var bytesWritten = 0
+    var nextByte = 0
+    var bitsRemaining = 8
     for(var i = 0; i < values.length; i++) {
       var v = values[i]
       for(var j = blockBits-1; j >= 0; j--) {
-        b <<= 1
-        br--
+        nextByte <<= 1
+        bitsRemaining--
         if(v >= (1 << j)){
-          b++
+          nextByte++
           v -= (1 << j)
         }
-        if(br == 0){
-          this.writeByte(b)
-          bytesWritten++
-          b = 0
-          br = 8
+        if(bitsRemaining == 0){
+          this.writeByte(nextByte)
+          nextByte = 0
+          bitsRemaining = 8
         }
       }
     }

@@ -10,10 +10,6 @@ class Handshake {
     bi.readByte(); //Skip the port
     bi.readByte();
     this.nextState = bi.readVarInt()
-    
-    if (!bi.empty()) {
-      this.leftoverData = bi.tail()
-    }
   }
 }
 

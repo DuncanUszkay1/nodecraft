@@ -18,11 +18,19 @@ class Packet {
     this.dataBuffer = lengthPrefixedStringBuffer(str);
   }
 
-  loadFromBuffer(buffer) {
+  static loadFromBuffer(buffer) {
     var bi = new BufferIterator(buffer);
-    this.length = bi.readVarInt();
-    this.packetID = bi.readVarInt();
-    this.dataBuffer = bi.tail();
+    var packets = []
+    var beginningOfNextPacket = 0
+    while (!bi.empty()) {
+      var packet = new Packet()
+      packet.length = bi.readVarInt();
+      beginningOfNextPacket = packet.length + bi.i
+      packet.packetID = bi.readVarInt();
+      packet.dataBuffer = bi.tail(beginningOfNextPacket);
+      packets.push(packet)
+    }
+    return packets
   }
 
   loadIntoBuffer() {
@@ -39,6 +47,14 @@ class Packet {
       packetIDBuffer.b,
       this.dataBuffer
     ]);
+  }
+
+  dataEquals(otherPacket) {
+    if (this.length != otherPacket.length) {
+      return false;
+    }
+    
+    return this.dataBuffer.equals(otherPacket.dataBuffer)
   }
 }
 

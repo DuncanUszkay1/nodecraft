@@ -131,8 +131,9 @@ class BufferIterator {
     return result
   }
 
-  readString(len) {
+  readString() {
     var result = []
+    var len = this.readByte()
     for(var i = 0; i < len; i++){
       result.push(this.readByte())
     }
@@ -140,11 +141,13 @@ class BufferIterator {
   }
 
 
-  tail() {
+  tail(upTo) {
     if(this.empty()){
       return Buffer.alloc(0)
     }
-    return this.b.slice(this.i)
+    var result = this.b.slice(this.i, upTo)
+    this.i = upTo
+    return result
   }
 
   empty() {

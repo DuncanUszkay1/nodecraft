@@ -1,10 +1,9 @@
-const BufferHelpers = require('../../buffer.js');
-const BufferIterator = BufferHelpers.BufferIterator;
+const ByteStream = require('../../byteStream.js');
 
 class LoginStart {
   constructor(packet){
-    var bi = new BufferIterator(Buffer.from(packet.dataBuffer))
-    this.username = bi.readString()
+    var bs = new ByteStream(Buffer.from(packet.dataBuffer))
+    this.username = bs.readString()
   }
 }
 

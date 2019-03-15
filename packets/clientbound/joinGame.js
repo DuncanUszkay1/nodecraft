@@ -1,8 +1,8 @@
 const Packet = require('../../packet.js');
-const BufferHelpers= require('../../buffer.js');
-const lengthPrefixedStringBuffer = BufferHelpers.lengthPrefixedStringBuffer;
-const intBuffer = BufferHelpers.intBuffer;
-const unsignedByteBuffer = BufferHelpers.unsignedByteBuffer;
+const BufferGenerators = require('../../bufferGenerators.js');
+const lengthPrefixedStringBuffer = BufferGenerators.lengthPrefixedStringBuffer;
+const intBuffer = BufferGenerators.intBuffer;
+const unsignedByteBuffer = BufferGenerators.unsignedByteBuffer;
 
 const tempHardcode = {
   eid: 1,

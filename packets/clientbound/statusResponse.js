@@ -1,6 +1,6 @@
 const Packet = require('../../packet.js');
-const BufferHelpers= require('../../buffer.js');
-const lengthPrefixedStringBuffer = BufferHelpers.lengthPrefixedStringBuffer;
+const BufferGenerators= require('../../bufferGenerators.js');
+const lengthPrefixedStringBuffer = BufferGenerators.lengthPrefixedStringBuffer;
 
 class StatusResponse extends Packet {
   constructor(serverStatus){

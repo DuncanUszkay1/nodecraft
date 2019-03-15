@@ -1,15 +1,14 @@
-const BufferHelpers = require('../../buffer.js');
-const BufferIterator = BufferHelpers.BufferIterator;
+const ByteStream = require('../../byteStream.js');
 const Packet = require('../../packet.js');
 
 class Handshake {
   constructor(packet){
-    var bi = new BufferIterator(Buffer.from(packet.dataBuffer))
-    this.protocolVersion = bi.readVarInt()
-    this.serverAddress = bi.readString()
-    bi.readByte(); //Skip the port
-    bi.readByte();
-    this.nextState = bi.readVarInt()
+    var bs = new ByteStream(Buffer.from(packet.dataBuffer))
+    this.protocolVersion = bs.readVarInt()
+    this.serverAddress = bs.readString()
+    bs.readByte(); //Skip the port
+    bs.readByte();
+    this.nextState = bs.readVarInt()
   }
 }
 

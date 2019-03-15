@@ -1,9 +1,9 @@
 const Packet = require('../../packet.js');
-const BufferHelpers= require('../../buffer.js');
-const doubleBuffer = BufferHelpers.doubleBuffer;
-const floatBuffer = BufferHelpers.floatBuffer;
-const unsignedByteBuffer = BufferHelpers.unsignedByteBuffer;
-const varIntBuffer = BufferHelpers.varIntBuffer;
+const BufferGenerators= require('../../bufferGenerators.js');
+const doubleBuffer = BufferGenerators.doubleBuffer;
+const floatBuffer = BufferGenerators.floatBuffer;
+const unsignedByteBuffer = BufferGenerators.unsignedByteBuffer;
+const varIntBuffer = BufferGenerators.varIntBuffer;
 
 class PlayerPosition extends Packet {
   constructor(x,y,z,ya,p){

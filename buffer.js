@@ -1,6 +1,4 @@
-var Int64BE = require("int64-buffer").Int64BE;
-
-const blockBits = 14
+const Int64BE = require("int64-buffer").Int64BE;
 
 function lengthPrefixedStringBuffer(str) {
   var strLengthBuffer = varIntBuffer(str.length);
@@ -19,7 +17,7 @@ function varIntBuffer(value) {
 }
 
 function arrayBuffer(values, f){
-  return Buffer.concat(values.map(v => f(v)))
+  return Buffer.concat(values.map(f))
 }
 
 function floatBuffer(value) {
@@ -101,22 +99,27 @@ class BufferIterator {
     } while (value != 0);
   }
 
-  writeBlocks(values) {
+  writeBlocks(values, blockBits) {
     if(values.length % 64 != 0){
       throw new Error(`Size of value array must be divisible by 64`)
     }
-    var nextByte = 0
-    var remainingBits = 8
-    var bitsWritten = 0
+    var b = 0
+    var br = 8
+    var bytesWritten = 0
     for(var i = 0; i < values.length; i++) {
-      for(var j = 0; j < blockBits; j++) {
-        nextByte = (nextByte << 1) + ((values[i] & (0b1 << j)) >> j)
-        remainingBits--
-        if(remainingBits == 0) {
-          bitsWritten++
-          this.writeByte(nextByte)
-          nextByte = 0
-          remainingBits = 8
+      var v = values[i]
+      for(var j = blockBits-1; j >= 0; j--) {
+        b <<= 1
+        br--
+        if(v >= (1 << j)){
+          b++
+          v -= (1 << j)
+        }
+        if(br == 0){
+          this.writeByte(b)
+          bytesWritten++
+          b = 0
+          br = 8
         }
       }
     }

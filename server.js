@@ -81,8 +81,8 @@ server.on('connection', socket => {
           socket.write(joinGame.loadIntoBuffer())
           var spawnPosition = new SpawnPosition(0,3,0)
           socket.write(spawnPosition.loadIntoBuffer())
-          for(var x = -4; x <= 4; x++){
-            for(var z = -4; z <= 4; z++){
+          for(var x = 0; x <= 0; x++){
+            for(var z = 0; z <= 0; z++){
               var loadChunk = new ChunkData(x,z)
               socket.write(loadChunk.loadIntoBuffer())
             }

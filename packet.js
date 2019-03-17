@@ -3,10 +3,6 @@ const ByteStream = require('./byteStream.js');
 const lengthPrefixedStringBuffer = BufferGenerators.lengthPrefixedStringBuffer
 const varIntBuffer = BufferGenerators.varIntBuffer;
 
-function varIntSizeOf(x) {
-    return x < 2 ? 1 : Math.ceil(Math.log2(x)/7);
-}
-
 class Packet {
   constructor() {
     this.length = null
@@ -37,14 +33,11 @@ class Packet {
     if(this.packetID == null){
       throw new Error("Cannot load a packet with a null id into a buffer")
     }
-    this.length = varIntSizeOf(this.packetID) + this.dataBuffer.length
-    var lengthByteStream = new ByteStream(Buffer.alloc(varIntSizeOf(this.length)));
-    var packetIDByteStream = new ByteStream(Buffer.alloc(varIntSizeOf(this.packetID)));
-    lengthByteStream.writeVarInt(this.length);
-    packetIDByteStream.writeVarInt(this.packetID);
+    this.length = BufferGenerators.varIntSizeOf(this.packetID) + this.dataBuffer.length
+
     return Buffer.concat([
-      lengthByteStream.buffer,
-      packetIDByteStream.buffer,
+      varIntBuffer(this.length),
+      varIntBuffer(this.packetID),
       this.dataBuffer
     ]);
   }

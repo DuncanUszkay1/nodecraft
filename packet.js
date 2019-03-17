@@ -1,7 +1,7 @@
-const BufferHelpers = require('./buffer.js');
-const BufferIterator = BufferHelpers.BufferIterator;
-const lengthPrefixedStringBuffer = BufferHelpers.lengthPrefixedStringBuffer
-const varIntBuffer = BufferHelpers.varIntBuffer;
+const BufferGenerators = require('./bufferGenerators.js');
+const ByteStream = require('./byteStream.js');
+const lengthPrefixedStringBuffer = BufferGenerators.lengthPrefixedStringBuffer
+const varIntBuffer = BufferGenerators.varIntBuffer;
 
 function varIntSizeOf(x) {
     return x < 2 ? 1 : Math.ceil(Math.log2(x)/7);
@@ -19,15 +19,15 @@ class Packet {
   }
 
   static loadFromBuffer(buffer) {
-    var bi = new BufferIterator(buffer);
+    var bs = new ByteStream(buffer);
     var packets = []
     var beginningOfNextPacket = 0
-    while (!bi.empty()) {
+    while (!bs.empty()) {
       var packet = new Packet()
-      packet.length = bi.readVarInt();
-      beginningOfNextPacket = packet.length + bi.i
-      packet.packetID = bi.readVarInt();
-      packet.dataBuffer = bi.tail(beginningOfNextPacket);
+      packet.length = bs.readVarInt();
+      beginningOfNextPacket = packet.length + bs.i
+      packet.packetID = bs.readVarInt();
+      packet.dataBuffer = bs.tail(beginningOfNextPacket);
       packets.push(packet)
     }
     return packets
@@ -38,13 +38,13 @@ class Packet {
       throw new Error("Cannot load a packet with a null id into a buffer")
     }
     this.length = varIntSizeOf(this.packetID) + this.dataBuffer.length
-    var lengthBuffer = new BufferIterator(Buffer.alloc(varIntSizeOf(this.length)));
-    var packetIDBuffer = new BufferIterator(Buffer.alloc(varIntSizeOf(this.packetID)));
-    lengthBuffer.writeVarInt(this.length);
-    packetIDBuffer.writeVarInt(this.packetID);
+    var lengthByteStream = new ByteStream(Buffer.alloc(varIntSizeOf(this.length)));
+    var packetIDByteStream = new ByteStream(Buffer.alloc(varIntSizeOf(this.packetID)));
+    lengthByteStream.writeVarInt(this.length);
+    packetIDByteStream.writeVarInt(this.packetID);
     return Buffer.concat([
-      lengthBuffer.b,
-      packetIDBuffer.b,
+      lengthByteStream.buffer,
+      packetIDByteStream.buffer,
       this.dataBuffer
     ]);
   }
@@ -53,7 +53,7 @@ class Packet {
     if (this.length != otherPacket.length) {
       return false;
     }
-    
+
     return this.dataBuffer.equals(otherPacket.dataBuffer)
   }
 }

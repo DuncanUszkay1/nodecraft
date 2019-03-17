@@ -1,6 +1,6 @@
 const Packet = require('../../packet.js');
-const BufferHelpers= require('../../buffer.js');
-const doubleBuffer = BufferHelpers.doubleBuffer;
+const BufferGenerators = require('../../bufferGenerators.js');
+const doubleBuffer = BufferGenerators.doubleBuffer;
 
 class KeepAlive extends Packet {
     constructor() {

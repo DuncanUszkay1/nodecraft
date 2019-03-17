@@ -1,10 +1,11 @@
 const Packet = require('../../packet.js');
-const BufferHelpers= require('../../buffer.js');
-const BufferIterator = BufferHelpers.BufferIterator;
-const intBuffer = BufferHelpers.intBuffer;
-const unsignedByteBuffer = BufferHelpers.unsignedByteBuffer;
-const varIntBuffer = BufferHelpers.varIntBuffer;
-const arrayBuffer = BufferHelpers.arrayBuffer;
+const BufferGenerators = require('../../bufferGenerators.js');
+const ByteStream = require('../../byteStream.js');
+
+const intBuffer = BufferGenerators.intBuffer;
+const unsignedByteBuffer = BufferGenerators.unsignedByteBuffer;
+const varIntBuffer = BufferGenerators.varIntBuffer;
+const arrayBuffer = BufferGenerators.arrayBuffer;
 
 const blockBits = 8
 const sectionsize = 16
@@ -61,21 +62,21 @@ class ChunkData extends Packet {
         }
       }
     }
-    var blockBufferIterator = new BufferIterator(Buffer.alloc(numOfLongs * 8))
-    blockBufferIterator.writeBlocks(blockvalues, blockBits)
-    var blockLightBufferIterator = new BufferIterator(Buffer.alloc(halfByteSize))
-    var skyLightBufferIterator = new BufferIterator(Buffer.alloc(halfByteSize))
+    var blockByteStream = new ByteStream(Buffer.alloc(numOfLongs * 8))
+    blockByteStream.writeBlocks(blockvalues, blockBits)
+    var blockLightByteStream = new ByteStream(Buffer.alloc(halfByteSize))
+    var skyLightByteStream = new ByteStream(Buffer.alloc(halfByteSize))
     for(var i = 0; i < halfByteSize; i++){
-      skyLightBufferIterator.writeByte(0xFF)
-      blockLightBufferIterator.writeByte(0xFF)
+      skyLightByteStream.writeByte(0xFF)
+      blockLightByteStream.writeByte(0xFF)
     }
     return Buffer.concat([
       unsignedByteBuffer(blockBits), //Bits per block
       ChunkData.buildPalette(), //Palette
       varIntBuffer(numOfLongs), //Number of longs in following array
-      blockBufferIterator.b, //Block data
-      blockLightBufferIterator.b, //Block Light
-      skyLightBufferIterator.b, //Sky Light
+      blockByteStream.buffer, //Block data
+      blockLightByteStream.buffer, //Block Light
+      skyLightByteStream.buffer, //Sky Light
     ])
   }
 }

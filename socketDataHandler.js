@@ -2,6 +2,7 @@ const SERVER_LOGGING = true;
 keepAliveSendInterval = 15000
 keepAliveMaxWaitForResponse = 30000
 
+const net = require('net')
 const Utility = require('./utility.js');
 const log = Utility.log
 const Packet = require('./packet.js');
@@ -14,6 +15,9 @@ const PlayerPosition = require('./packets/clientbound/playerPosition.js');
 const ChunkData = require('./packets/clientbound/chunkData.js');
 const JoinGame = require('./packets/clientbound/joinGame.js');
 const KeepAlive = require('./packets/clientbound/keepAlive.js');
+const ClientboundHandshake = require('./packets/clientbound/handshake.js');
+const ClientboundLoginStart = require('./packets/clientbound/loginStart.js');
+const localizePacket = require('./localize.js');
 
 const sampleStatus = `{
     "version": {
@@ -32,9 +36,10 @@ const sampleStatus = `{
 
 class SocketDataHandler {
     constructor(socket) {
-        this.state = 0
-        this.socket = socket
-        this.keepAliveTimeout = []
+      this.state = 0
+      this.socket = socket
+      this.keepAliveTimeout = []
+      this.remoteServer = null
     }
 
     close() {
@@ -46,15 +51,72 @@ class SocketDataHandler {
       this.keepAliveTimeout.push(setTimeout(() => this.socket.destroy(), keepAliveMaxWaitForResponse))
       this.socket.write(this.keepAlivePacket.loadIntoBuffer());
     }
-  
+
+    handshake(packet) {
+      var handshake = new Handshake(packet)
+      this.state = handshake.nextState
+      log(`handshake with state ${this.state}`)
+    }
+
+    statusResponse() {
+      var statusResponse = new StatusResponse(sampleStatus)
+      log(`sending status..`)
+      this.socket.write(statusResponse.loadIntoBuffer())
+    }
+
+    processLogin(packet) {
+      var loginStart = new LoginStart(packet)
+      log(`User ${loginStart.username} is logging in...`)
+      return loginStart.username
+    }
+
+    confirmLogin(username) {
+      var loginSuccess = new LoginSuccess(username)
+      this.socket.write(loginSuccess.loadIntoBuffer())
+    }
+
+    joinGame() {
+      var joinGame = new JoinGame()
+      this.socket.write(joinGame.loadIntoBuffer())
+      var spawnPosition = new SpawnPosition(8,3,8)
+      this.socket.write(spawnPosition.loadIntoBuffer())
+    }
+
+    loadArea() {
+      log('Loading server region for new player..')
+      var loadChunk = new ChunkData(0,0)
+      this.socket.write(loadChunk.loadIntoBuffer())
+    }
+
+    connectToPeers(username) {
+      log('Connecting to peers..')
+      var addr = '127.0.0.1'
+      var port = 8001
+      var addrPort = `${addr}:${port}`
+      this.remoteServer = net.createConnection({ port: port }, () => {
+        log(`Connected to peer at ${addrPort}`)
+        this.remoteServer.write(new ClientboundHandshake(404, addrPort, 3).loadIntoBuffer())
+        this.remoteServer.write(new ClientboundLoginStart(username).loadIntoBuffer())
+      })
+      this.remoteServer.on('data', data => {
+        var localizedData = localizePacket(data, 1, 0)
+        if(localizedData) {
+          this.socket.write(localizedData)
+        }
+      })
+    }
+
+    placePlayer() {
+      var playerPosition = new PlayerPosition(8,30,8,0,0)
+      this.socket.write(playerPosition.loadIntoBuffer())
+    }
+
     socketData(data) {
       Packet.loadFromBuffer(data).forEach(packet => {
         if(this.state == 0) { //PreHandshake
           switch(packet.packetID) {
             case 0:
-              var handshake = new Handshake(packet)
-              this.state = handshake.nextState
-              log(`handshake with state ${this.state}`)
+              this.handshake(packet);
               break;
             default:
               log(`state 3: unexpected packet id ${packet.packetID}`)
@@ -62,9 +124,7 @@ class SocketDataHandler {
         } else if(this.state == 1) { //PostStatusHandshake
           switch(packet.packetID) {
             case 0:
-              var statusResponse = new StatusResponse(sampleStatus)
-              log(`sending status..`)
-              this.socket.write(statusResponse.loadIntoBuffer())
+              this.statusResponse()
               break;
             case 1:
               this.socket.write(packet.loadIntoBuffer())
@@ -76,39 +136,24 @@ class SocketDataHandler {
         } else if(this.state == 2) { //PostLoginHandshake
           switch(packet.packetID){
             case 0:
-              var loginStart = new LoginStart(packet)
-              log(`User ${loginStart.username} is logging in...`)
-              var loginSuccess = new LoginSuccess(loginStart.username)
-              this.socket.write(loginSuccess.loadIntoBuffer())
-              var joinGame = new JoinGame(loginStart.username)
-              this.socket.write(joinGame.loadIntoBuffer())
-              var spawnPosition = new SpawnPosition(0,3,0)
-              this.socket.write(spawnPosition.loadIntoBuffer())
-              for(var x = -4; x <= 4; x++){
-                for(var z = -4; z <= 4; z++){
-                  var loadChunk = new ChunkData(x,z)
-                  this.socket.write(loadChunk.loadIntoBuffer())
-                }
-              }
-              var playerPosition = new PlayerPosition(0,30,0,0,0)
-              this.socket.write(playerPosition.loadIntoBuffer())
-              this.state = 4
+              var username = this.processLogin(packet)
+              this.confirmLogin(username)
+              this.joinGame()
+              this.loadArea()
+              this.connectToPeers(username)
+              this.placePlayer()
               this.keepAliveInterval = setInterval(this.keepAlive.bind(this), keepAliveSendInterval)
+              this.state = 4
               break;
             default:
               log(`state 2: unexpected packet id ${packet.packetID}`)
               break;
           }
-        } else if(this.state == 3) {
-          switch(packet.packetID) {
-            case 0:
-              log(`teleport confirm`)
-              this.state = 4
-              break;
-            default:
-              log(`state 3: unexpected packet id ${packet.packetID}`)
-              break;
-          }
+        } else if(this.state == 3) { //PostP2PLoginHandshake
+          var username = this.processLogin(packet)
+          this.confirmLogin(username)
+          this.loadArea()
+          this.state = 4
         } else { //Play
           switch(packet.packetID) {
             case 0x0E:

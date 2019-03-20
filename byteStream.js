@@ -73,6 +73,17 @@ class ByteStream {
     }
   }
 
+  readInt() {
+    var value = this.buffer.readInt32BE(this.i)
+    this.i += 4
+    return value
+  }
+
+  writeInt(val) {
+    this.buffer.writeInt32BE(val, this.i)
+    this.i += 4
+  }
+
   readByteArray() {
     var result = []
     while(!this.empty()){

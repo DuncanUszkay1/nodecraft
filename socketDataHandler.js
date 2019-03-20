@@ -12,6 +12,7 @@ const LoginSuccess = require('./packets/clientbound/loginSuccess.js');
 const StatusResponse = require('./packets/clientbound/statusResponse.js');
 const SpawnPosition = require('./packets/clientbound/spawnPosition.js');
 const PlayerPosition = require('./packets/clientbound/playerPosition.js');
+const ServerboundPlayerPosition = require('./packets/serverbound/playerPosition.js');
 const ChunkData = require('./packets/clientbound/chunkData.js');
 const JoinGame = require('./packets/clientbound/joinGame.js');
 const KeepAlive = require('./packets/clientbound/keepAlive.js');
@@ -40,6 +41,11 @@ class SocketDataHandler {
       this.socket = socket
       this.keepAliveTimeout = []
       this.remoteServer = null
+      this.player = {
+        x: 8,
+        y: 0,
+        z: 8
+      }
     }
 
     close() {
@@ -99,9 +105,10 @@ class SocketDataHandler {
         this.remoteServer.write(new ClientboundLoginStart(username).loadIntoBuffer())
       })
       this.remoteServer.on('data', data => {
-        var localizedData = localizePacket(data, 1, 0)
-        if(localizedData) {
-          this.socket.write(localizedData)
+        var packet = Packet.loadFromBuffer(data)[0]
+        var localizedPacket = localizePacket(packet, 1, 0, 0)
+        if(localizedPacket) {
+          this.socket.write(localizedPacket.loadIntoBuffer())
         }
       })
     }
@@ -154,14 +161,32 @@ class SocketDataHandler {
           this.confirmLogin(username)
           this.loadArea()
           this.state = 4
-        } else { //Play
-          switch(packet.packetID) {
+        } else if(this.state == 4) { //Play
+          switch(packet.packetID) { //Packets that must be read regardless of player pos
             case 0x0E:
               if (!packet.dataEquals(this.keepAlivePacket)) {
                 this.socket.destroy()
               }
               this.keepAliveTimeout.forEach(clearTimeout)
-              break;
+              return;
+            case 0x10:
+              var playerPosition = new ServerboundPlayerPosition(packet)
+              Object.assign(this.player, {
+                  x: playerPosition.x,
+                  y: playerPosition.y,
+                  z: playerPosition.z
+              })
+          }
+
+          var localizedPacket = null
+          if(this.player.x > 16) { //If the player isn't in our region
+            localizedPacket = localizePacket(packet, 1, 0, 1)
+            this.remoteServer.write(localizedPacket.loadIntoBuffer())
+          } else { //If the player is in our region
+            switch(packet.packetID) {
+              case 0x10:
+                log(`player position: x: ${playerPosition.x}, y: ${playerPosition.y}, z: ${playerPosition.z}`)
+            }
           }
         }
       });

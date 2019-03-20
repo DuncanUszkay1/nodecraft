@@ -15,7 +15,7 @@ const tempHardcode = {
 }
 
 class JoinGame extends Packet {
-  constructor(username){
+  constructor(){
     super()
     this.packetID = 0x25
     this.eid = tempHardcode.eid

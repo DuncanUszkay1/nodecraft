@@ -10,6 +10,8 @@ class Packet {
     this.dataBuffer = Buffer.alloc(0)
   }
 
+  localize(x,z) {}
+
   loadStringIntoDataBuffer(str) {
     this.dataBuffer = lengthPrefixedStringBuffer(str);
   }

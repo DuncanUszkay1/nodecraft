@@ -3,7 +3,7 @@ const log = Utility.log
 const net = require('net');
 const server = net.createServer();
 const hostname = '127.0.0.1';
-const port = 8000;
+const port = process.argv.slice(2)[0];
 
 const SocketDataHandler = require('./socketDataHandler.js');
 

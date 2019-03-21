@@ -1,3 +1,5 @@
+const BitStream = require('./bitStream.js');
+
 class ByteStream {
   constructor(buffer) {
     this.buffer = buffer
@@ -101,6 +103,20 @@ class ByteStream {
     return Buffer.from(result).toString()
   }
 
+  readPosition() {
+    var x, y, z
+    var bitStream = new BitStream(this.buffer.slice(this.i, this.i+8))
+    x = bitStream.readSignedInt(26)
+    y = bitStream.readSignedInt(12)
+    z = bitStream.readSignedInt(26)
+    return [x, y, z]
+  }
+
+  writePosition(position) {
+    var bitStream = new BitStream(this.buffer.slice(this.i, this.i+8))
+    bitStream.writePosition(position)
+    this.i += bitStream.i
+  }
 
   tail(upTo) {
     if(this.empty()){

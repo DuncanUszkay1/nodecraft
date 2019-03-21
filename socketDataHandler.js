@@ -8,6 +8,7 @@ const log = Utility.log
 const Packet = require('./packet.js');
 const Handshake = require('./packets/serverbound/handshake.js');
 const LoginStart = require('./packets/serverbound/loginStart.js');
+const PlayerDigging = require('./packets/serverbound/playerDigging.js');
 const LoginSuccess = require('./packets/clientbound/loginSuccess.js');
 const StatusResponse = require('./packets/clientbound/statusResponse.js');
 const SpawnPosition = require('./packets/clientbound/spawnPosition.js');
@@ -111,6 +112,11 @@ class SocketDataHandler {
       this.socket.write(playerPosition.loadIntoBuffer())
     }
 
+    playerDigging(packet) {
+      var playerDigging = new PlayerDigging(packet)
+      log(`block destroyed at x:${playerDigging.position[0]} y:${playerDigging.position[1]} z:${playerDigging.position[2]}`)
+    }
+
     socketData(data) {
       Packet.loadFromBuffer(data).forEach(packet => {
         if(this.state == 0) { //PreHandshake
@@ -162,6 +168,8 @@ class SocketDataHandler {
               }
               this.keepAliveTimeout.forEach(clearTimeout)
               break;
+            case 0x18:
+              this.playerDigging(packet)
           }
         }
       });

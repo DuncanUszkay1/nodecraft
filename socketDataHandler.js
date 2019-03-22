@@ -18,6 +18,7 @@ const JoinGame = require('./packets/clientbound/joinGame.js');
 const KeepAlive = require('./packets/clientbound/keepAlive.js');
 const ClientboundHandshake = require('./packets/clientbound/handshake.js');
 const ClientboundLoginStart = require('./packets/clientbound/loginStart.js');
+const BlockChange = require('./packets/clientbound/blockChange.js');
 const localizePacket = require('./localize.js');
 
 const sampleStatus = `{
@@ -114,7 +115,8 @@ class SocketDataHandler {
 
     playerDigging(packet) {
       var playerDigging = new PlayerDigging(packet)
-      log(`block destroyed at x:${playerDigging.position[0]} y:${playerDigging.position[1]} z:${playerDigging.position[2]}`)
+      var blockChange = new BlockChange(playerDigging);
+      this.socket.write(blockChange.loadIntoBuffer())
     }
 
     socketData(data) {
@@ -170,6 +172,7 @@ class SocketDataHandler {
               break;
             case 0x18:
               this.playerDigging(packet)
+              break;
           }
         }
       });

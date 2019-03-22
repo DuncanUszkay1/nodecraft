@@ -83,6 +83,17 @@ class ByteStream {
     this.i += 4
   }
 
+  readDouble() {
+    var value = this.buffer.readDoubleBE(this.i)
+    this.i += 8
+    return value
+  }
+
+  writeDouble(val) {
+    this.buffer.writeDoubleBE(val, this.i)
+    this.i += 8
+  }
+
   readByteArray() {
     var result = []
     while(!this.empty()){

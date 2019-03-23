@@ -5,7 +5,6 @@ const intBuffer = BufferGenerators.intBuffer;
 const unsignedByteBuffer = BufferGenerators.unsignedByteBuffer;
 
 const tempHardcode = {
-  eid: 1,
   gamemode: 1,
   dimension: 0,
   difficulty: 0,
@@ -15,10 +14,10 @@ const tempHardcode = {
 }
 
 class JoinGame extends Packet {
-  constructor(){
+  constructor(eid){
     super()
     this.packetID = 0x25
-    this.eid = tempHardcode.eid
+    this.eid = eid
     this.gamemode = tempHardcode.gamemode
     this.dimension = tempHardcode.dimension
     this.difficulty = tempHardcode.difficulty

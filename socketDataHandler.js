@@ -13,6 +13,9 @@ const LoginSuccess = require('./packets/clientbound/loginSuccess.js');
 const StatusResponse = require('./packets/clientbound/statusResponse.js');
 const SpawnPosition = require('./packets/clientbound/spawnPosition.js');
 const PlayerPosition = require('./packets/clientbound/playerPosition.js');
+const SpawnPlayer = require('./packets/clientbound/spawnPlayer.js');
+const NewPlayerInfo = require('./packets/clientbound/newPlayerInfo.js');
+const RelativeEntityMove = require('./packets/clientbound/relativeEntityMove.js');
 const ServerboundPlayerPosition = require('./packets/serverbound/playerPosition.js');
 const ChunkData = require('./packets/clientbound/chunkData.js');
 const JoinGame = require('./packets/clientbound/joinGame.js');
@@ -38,16 +41,14 @@ const sampleStatus = `{
 }`
 
 class SocketDataHandler {
-    constructor(socket) {
+    constructor(socket, chunkMap, playerList) {
       this.state = 0
       this.socket = socket
+      this.chunkMap = chunkMap
+      this.playerList = playerList
       this.keepAliveTimeout = []
       this.remoteServer = null
-      this.player = {
-        x: 8,
-        y: 0,
-        z: 8
-      }
+      this.player = null
     }
 
     close() {
@@ -83,10 +84,26 @@ class SocketDataHandler {
       this.socket.write(loginSuccess.loadIntoBuffer())
     }
 
+    createPlayer(username) {
+      this.player = this.playerList.createPlayer(username, this.socket)
+    }
+
+    loginNotifyPlayers() {
+      log('Notifying players..')
+      console.log(this.playerList)
+      this.playerList.notify(new NewPlayerInfo([this.player]).loadIntoBuffer())
+      log('Spawning Player entity..')
+      this.playerList.notify(new SpawnPlayer(this.player).loadIntoBuffer())
+    }
+
+    subscribePlayer() {
+      this.playerList.addPlayer(this.player)
+    }
+
     joinGame() {
-      var joinGame = new JoinGame()
+      var joinGame = new JoinGame(this.player.eid)
       this.socket.write(joinGame.loadIntoBuffer())
-      var spawnPosition = new SpawnPosition(8,3,8)
+      var spawnPosition = new SpawnPosition(this.player.x, this.player.y, this.player.z)
       this.socket.write(spawnPosition.loadIntoBuffer())
     }
 
@@ -96,27 +113,46 @@ class SocketDataHandler {
       this.socket.write(loadChunk.loadIntoBuffer())
     }
 
-    connectToPeers(username) {
+    connectToPeers() {
       log('Connecting to peers..')
-      var addr = '127.0.0.1'
-      var port = 8001
-      var addrPort = `${addr}:${port}`
-      this.remoteServer = net.createConnection({ port: port }, () => {
-        log(`Connected to peer at ${addrPort}`)
-        this.remoteServer.write(new ClientboundHandshake(404, addrPort, 3).loadIntoBuffer())
-        this.remoteServer.write(new ClientboundLoginStart(username).loadIntoBuffer())
+      this.chunkMap.map((serverInfo, x, z) => {
+        if(serverInfo && !serverInfo.localhost) {
+          serverInfo.connection = this.connectToPeer(serverInfo, x, z)
+          return serverInfo
+        }
+        return null
       })
-      this.remoteServer.on('data', data => {
+    }
+
+    connectToPeer(serverInfo, x, z) {
+      log(`Connecting to ${serverInfo}`)
+      var addr = serverInfo.addr
+      var port = serverInfo.port
+      var addrPort = `${addr}:${port}`
+      //Note that the non localhost option below is probably wrong
+      var connOptions = serverInfo.localhost ? { port: port } : { port: port, addr: addr }
+      var peer = net.createConnection(connOptions, () => {
+        log(`Connected to peer at ${addrPort}`)
+        peer.write(new ClientboundHandshake(404, addrPort, 3).loadIntoBuffer())
+        peer.write(new ClientboundLoginStart(this.player.username).loadIntoBuffer())
+        this.subscribeToPeer(peer, x, z)
+      })
+      return peer
+    }
+
+    subscribeToPeer(peer, x, z) {
+      peer.on('data', data => {
         var packet = Packet.loadFromBuffer(data)[0]
-        var localizedPacket = localizePacket(packet, 1, 0, 0)
+        var localizedPacket = localizePacket(packet, x, z, 0)
         if(localizedPacket) {
+          console.log(`peer packet id ${localizedPacket.packetID}`)
           this.socket.write(localizedPacket.loadIntoBuffer())
         }
       })
     }
 
     placePlayer() {
-      var playerPosition = new PlayerPosition(8,30,8,0,0)
+      var playerPosition = new PlayerPosition(this.player.x,this.player.y,this.player.z,0,0)
       this.socket.write(playerPosition.loadIntoBuffer())
     }
 
@@ -153,9 +189,12 @@ class SocketDataHandler {
             case 0:
               var username = this.processLogin(packet)
               this.confirmLogin(username)
+              this.createPlayer(username)
               this.joinGame()
+              this.loginNotifyPlayers()
+              this.subscribePlayer()
               this.loadArea()
-              this.connectToPeers(username)
+              this.connectToPeers()
               this.placePlayer()
               this.keepAliveInterval = setInterval(this.keepAlive.bind(this), keepAliveSendInterval)
               this.state = 4
@@ -167,6 +206,8 @@ class SocketDataHandler {
         } else if(this.state == 3) { //PostP2PLoginHandshake
           var username = this.processLogin(packet)
           this.confirmLogin(username)
+          this.createPlayer(username)
+          this.subscribePlayer()
           this.loadArea()
           this.state = 4
         } else if(this.state == 4) { //Play
@@ -182,6 +223,11 @@ class SocketDataHandler {
               break;
             case 0x10:
               var playerPosition = new ServerboundPlayerPosition(packet)
+              var oldPosition = {
+                x: this.player.x,
+                y: this.player.y,
+                z: this.player.z
+              }
               Object.assign(this.player, {
                   x: playerPosition.x,
                   y: playerPosition.y,
@@ -189,14 +235,23 @@ class SocketDataHandler {
               })
           }
 
+          var server = this.chunkMap.getServer(Math.floor(this.player.x/16),Math.floor(this.player.z/16))
           var localizedPacket = null
-          if(this.player.x > 16) { //If the player isn't in our region
-            localizedPacket = localizePacket(packet, 1, 0, 1)
-            this.remoteServer.write(localizedPacket.loadIntoBuffer())
+          if(server && !server.localhost) {
+            localizedPacket = localizePacket(packet, server.x, server.z, 0)
+            if(localizedPacket) {
+              log(`recevied packet`)
+              server.connection.write(localizedPacket.loadIntoBuffer())
+            }
           } else { //If the player is in our region
+            var notificationPacket = null
             switch(packet.packetID) {
               case 0x10:
-                log(`player position: x: ${playerPosition.x}, y: ${playerPosition.y}, z: ${playerPosition.z}`)
+                notificationPacket = new RelativeEntityMove(this.player, oldPosition, playerPosition)
+                //log(`player position: x: ${playerPosition.x}, y: ${playerPosition.y}, z: ${playerPosition.z}`)
+            }
+            if(notificationPacket) {
+              this.playerList.notify(notificationPacket.loadIntoBuffer(), this.player.eid)
             }
           }
         }

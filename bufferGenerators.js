@@ -1,10 +1,15 @@
 const ByteStream = require("./byteStream.js");
+const uuidParse = require("uuid-parse");
 
 class BufferGenerators {
   static lengthPrefixedStringBuffer(str) {
     var strLengthBuffer = BufferGenerators.varIntBuffer(str.length);
     var strBuffer = Buffer.from(str)
     return Buffer.concat([strLengthBuffer, strBuffer])
+  }
+
+  static uuidBuffer(uuid) {
+    return Buffer.from(uuidParse.parse(uuid))
   }
 
   static positionBuffer([x,y,z]) {
@@ -43,6 +48,12 @@ class BufferGenerators {
   static intBuffer(value) {
     var b = Buffer.alloc(4)
     b.writeInt32BE(value)
+    return b
+  }
+
+  static shortBuffer(value) {
+    var b = Buffer.alloc(2)
+    b.writeInt16BE(value)
     return b
   }
 

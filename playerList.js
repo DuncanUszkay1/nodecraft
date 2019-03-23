@@ -10,7 +10,6 @@ class PlayerList {
   }
 
   addPlayer(player) {
-    console.log(`adding player`)
     this.players.push(player)
   }
 

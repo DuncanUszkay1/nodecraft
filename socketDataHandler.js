@@ -90,7 +90,6 @@ class SocketDataHandler {
 
     loginNotifyPlayers() {
       log('Notifying players..')
-      console.log(this.playerList)
       this.playerList.notify(new NewPlayerInfo([this.player]).loadIntoBuffer())
       log('Spawning Player entity..')
       this.playerList.notify(new SpawnPlayer(this.player).loadIntoBuffer())
@@ -125,14 +124,12 @@ class SocketDataHandler {
     }
 
     connectToPeer(serverInfo, x, z) {
-      log(`Connecting to ${serverInfo}`)
       var addr = serverInfo.addr
       var port = serverInfo.port
       var addrPort = `${addr}:${port}`
       //Note that the non localhost option below is probably wrong
       var connOptions = serverInfo.localhost ? { port: port } : { port: port, addr: addr }
       var peer = net.createConnection(connOptions, () => {
-        log(`Connected to peer at ${addrPort}`)
         peer.write(new ClientboundHandshake(404, addrPort, 3).loadIntoBuffer())
         peer.write(new ClientboundLoginStart(this.player.username).loadIntoBuffer())
         this.subscribeToPeer(peer, x, z)
@@ -145,7 +142,6 @@ class SocketDataHandler {
         var packet = Packet.loadFromBuffer(data)[0]
         var localizedPacket = localizePacket(packet, x, z, 0)
         if(localizedPacket) {
-          console.log(`peer packet id ${localizedPacket.packetID}`)
           this.socket.write(localizedPacket.loadIntoBuffer())
         }
       })
@@ -209,8 +205,8 @@ class SocketDataHandler {
           this.createPlayer(username)
           this.subscribePlayer()
           this.loadArea()
-          this.state = 4
-        } else if(this.state == 4) { //Play
+          this.state = 5
+        } else if (this.state == 4 || this.state == 5) {
           switch(packet.packetID) { //Packets that must be read regardless of player pos
             case 0x0E:
               if (!packet.dataEquals(this.keepAlivePacket)) {
@@ -233,25 +229,27 @@ class SocketDataHandler {
                   y: playerPosition.y,
                   z: playerPosition.z
               })
+              break;
           }
 
-          var server = this.chunkMap.getServer(Math.floor(this.player.x/16),Math.floor(this.player.z/16))
-          var localizedPacket = null
-          if(server && !server.localhost) {
-            localizedPacket = localizePacket(packet, server.x, server.z, 0)
-            if(localizedPacket) {
-              log(`recevied packet`)
-              server.connection.write(localizedPacket.loadIntoBuffer())
-            }
-          } else { //If the player is in our region
-            var notificationPacket = null
-            switch(packet.packetID) {
-              case 0x10:
-                notificationPacket = new RelativeEntityMove(this.player, oldPosition, playerPosition)
-                //log(`player position: x: ${playerPosition.x}, y: ${playerPosition.y}, z: ${playerPosition.z}`)
-            }
-            if(notificationPacket) {
-              this.playerList.notify(notificationPacket.loadIntoBuffer(), this.player.eid)
+          if(this.state == 4) { //Play
+            var server = this.chunkMap.getServer(Math.floor(this.player.x/16),Math.floor(this.player.z/16))
+            var localizedPacket = null
+            if(server && !server.localhost) {
+              localizedPacket = localizePacket(packet, server.x, server.z, 0)
+              if(localizedPacket) {
+                server.connection.write(localizedPacket.loadIntoBuffer())
+              }
+            } else { //If the player is in our region
+              var notificationPacket = null
+              switch(packet.packetID) {
+                case 0x10:
+                  notificationPacket = new RelativeEntityMove(this.player, oldPosition, playerPosition)
+                  //log(`player position: x: ${playerPosition.x}, y: ${playerPosition.y}, z: ${playerPosition.z}`)
+              }
+              if(notificationPacket) {
+                this.playerList.notify(notificationPacket.loadIntoBuffer(), this.player.eid)
+              }
             }
           }
         }

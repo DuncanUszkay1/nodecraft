@@ -12,7 +12,6 @@ class SpawnPlayer extends Packet {
     var ya = 0
     var p = 0
     this.packetID = 0x05
-    console.log(`spawning player at x: ${player.x} z: ${player.z}`)
     this.dataBuffer = Buffer.concat([
       varIntBuffer(player.eid),
       uuidBuffer(player.uuid),

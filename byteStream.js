@@ -100,8 +100,6 @@ class ByteStream {
 
   amendDouble(f) {
     var d = this.readDouble()
-    console.log(`amend d ${d}`)
-    console.log(`into ${f(d)}`)
     this.i -= 8
     this.writeDouble(f(d))
   }

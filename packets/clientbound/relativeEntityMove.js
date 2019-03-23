@@ -14,8 +14,6 @@ class RelativeEntityMove extends Packet {
     var deltaY = (position.y - oldPosition.y) * diffFactor
     var deltaZ = (position.z - oldPosition.z) * diffFactor
     this.packetID = 0x28
-    console.log(oldPosition)
-    console.log(position)
     this.dataBuffer = Buffer.concat([
       varIntBuffer(player.eid),
       shortBuffer(deltaX),

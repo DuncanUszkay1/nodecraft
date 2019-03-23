@@ -21,7 +21,6 @@ class ByteStream {
     this.i++
   }
 
-
   readVarInt() {
     var numRead = 0;
     var result = 0;
@@ -124,6 +123,16 @@ class ByteStream {
     return Buffer.from(result).toString()
   }
 
+  readPosition() {
+    var x, y, z
+    var first = this.buffer.slice(this.i).readInt32BE()
+    var second = this.buffer.slice(this.i+4).readInt32BE()
+    x = first >> 6
+    y = ((first & 0x3F) << 3) | (second >>> 26)
+    z = second & 0x03FFFFFF
+    this.i += 8
+    return [x, y, z]
+  }
 
   tail(upTo) {
     if(this.empty()){

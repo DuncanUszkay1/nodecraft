@@ -8,6 +8,7 @@ const log = Utility.log
 const Packet = require('./packet.js');
 const Handshake = require('./packets/serverbound/handshake.js');
 const LoginStart = require('./packets/serverbound/loginStart.js');
+const PlayerDigging = require('./packets/serverbound/playerDigging.js');
 const LoginSuccess = require('./packets/clientbound/loginSuccess.js');
 const StatusResponse = require('./packets/clientbound/statusResponse.js');
 const SpawnPosition = require('./packets/clientbound/spawnPosition.js');
@@ -18,6 +19,7 @@ const JoinGame = require('./packets/clientbound/joinGame.js');
 const KeepAlive = require('./packets/clientbound/keepAlive.js');
 const ClientboundHandshake = require('./packets/clientbound/handshake.js');
 const ClientboundLoginStart = require('./packets/clientbound/loginStart.js');
+const BlockChange = require('./packets/clientbound/blockChange.js');
 const localizePacket = require('./localize.js');
 
 const sampleStatus = `{
@@ -118,6 +120,12 @@ class SocketDataHandler {
       this.socket.write(playerPosition.loadIntoBuffer())
     }
 
+    playerDigging(packet) {
+      var playerDigging = new PlayerDigging(packet)
+      var blockChange = new BlockChange(playerDigging);
+      this.socket.write(blockChange.loadIntoBuffer())
+    }
+
     socketData(data) {
       Packet.loadFromBuffer(data).forEach(packet => {
         if(this.state == 0) { //PreHandshake
@@ -169,6 +177,9 @@ class SocketDataHandler {
               }
               this.keepAliveTimeout.forEach(clearTimeout)
               return;
+            case 0x18:
+              this.playerDigging(packet)
+              break;
             case 0x10:
               var playerPosition = new ServerboundPlayerPosition(packet)
               Object.assign(this.player, {

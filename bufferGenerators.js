@@ -1,4 +1,3 @@
-const Int64BE = require("int64-buffer").Int64BE;
 const ByteStream = require("./byteStream.js");
 
 class BufferGenerators {
@@ -8,8 +7,14 @@ class BufferGenerators {
     return Buffer.concat([strLengthBuffer, strBuffer])
   }
 
-  static positionBuffer(x,y,z) {
-    return (new Int64BE(((x & 0x3FFFFFF) << 38) | ((y & 0xFFF) << 26) | (z & 0x3FFFFFF))).toBuffer()
+  static positionBuffer([x,y,z]) {
+    var firstInt32 = ((x & 0x03FFFFFF) << 6) | ((y & 0x0FC0) >>> 6)
+    var secondInt32 = ((y & 0x3F) << 26) | (z & 0x03FFFFFF)
+
+    var buf = Buffer.alloc(8)
+    buf.writeInt32BE(firstInt32)
+    buf.slice(4).writeInt32BE(secondInt32)
+    return buf
   }
 
   static varIntBuffer(value) {

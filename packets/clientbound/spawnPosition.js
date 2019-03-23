@@ -6,7 +6,7 @@ class SpawnPosition extends Packet {
   constructor(x,y,z){
     super()
     this.packetID = 0x49
-    this.dataBuffer = positionBuffer(x,y,z)
+    this.dataBuffer = positionBuffer([x,y,z])
   }
 }
 

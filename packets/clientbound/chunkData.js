@@ -50,7 +50,6 @@ class ChunkData extends Packet {
       varIntBuffer(paletteSize), //Palette Size
       arrayBuffer(palette, varIntBuffer) //Palette Entries
     ])
-
   }
 
   static buildSection() {

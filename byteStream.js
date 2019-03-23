@@ -84,6 +84,10 @@ class ByteStream {
     this.i += 4
   }
 
+  skipUuid() {
+    this.i += 16
+  }
+
   readDouble() {
     var value = this.buffer.readDoubleBE(this.i)
     this.i += 8
@@ -93,6 +97,14 @@ class ByteStream {
   writeDouble(val) {
     this.buffer.writeDoubleBE(val, this.i)
     this.i += 8
+  }
+
+  amendDouble(f) {
+    var d = this.readDouble()
+    console.log(`amend d ${d}`)
+    console.log(`into ${f(d)}`)
+    this.i -= 8
+    this.writeDouble(f(d))
   }
 
   readByteArray() {

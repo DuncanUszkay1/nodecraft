@@ -2,6 +2,7 @@ const Packet = require('./packet.js');
 const ChunkData = require('./packets/serverbound/chunkData.js');
 const PlayerPosition = require('./packets/serverbound/playerPosition.js');
 const LoginSuccess = require('./packets/clientbound/loginSuccess.js');
+const SpawnPlayer = require('./packets/serverbound/spawnPlayer.js');
 const log = require('./utility.js').log
 
 
@@ -14,18 +15,22 @@ function identify(packet, ctx) {
       switch(packet.packetID){
         case 0x22:
           return ChunkData
+        case 0x05:
+          return SpawnPlayer
         case 2:
           return LoginSuccess
         default:
-          log(`Unrecognized packet ID ${packet.packetID}`)
+          //log(`Unrecognized packet ID ${packet.packetID}`)
+          break;
       }
-      //break;
+      break;
     case 1:
       switch(packet.packetID){
         case 0x10:
           return PlayerPosition
         default:
-          log(`Unrecognized packet ID ${packet.packetID}`)
+          //log(`Unrecognized packet ID ${packet.packetID}`)
+          break;
       }
       break;
     default:

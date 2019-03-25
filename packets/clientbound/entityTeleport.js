@@ -7,12 +7,12 @@ const varIntBuffer = BufferGenerators.varIntBuffer;
 const shortBuffer = BufferGenerators.shortBuffer;
 
 class RelativeEntityMove extends Packet {
-  constructor(player){
+  constructor(player, oldPosition, position){
     super()
     var diffFactor = 128 * 32
-    var deltaX = (player.position.x - player.oldPosition.x) * diffFactor
-    var deltaY = (player.position.y - player.oldPosition.y) * diffFactor
-    var deltaZ = (player.position.z - player.oldPosition.z) * diffFactor
+    var deltaX = (position.x - oldPosition.x) * diffFactor
+    var deltaY = (position.y - oldPosition.y) * diffFactor
+    var deltaZ = (position.z - oldPosition.z) * diffFactor
     this.packetID = 0x28
     this.dataBuffer = Buffer.concat([
       varIntBuffer(player.eid),

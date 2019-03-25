@@ -10,15 +10,26 @@ class Player {
     this.username = username
     this.socket = socket
     this.uuid = uuid()
-    this.x = spawnX
-    this.y = spawnY
-    this.z = spawnZ
+    this.position = {
+      x: spawnX,
+      y: spawnY,
+      z: spawnZ
+    }
+    this.oldPosition = {}
     this.eid = eid
     eid++
   }
 
   notify(packet) {
     this.socket.write(packet)
+  }
+
+  archivePosition() {
+    Object.assign(this.oldPosition, {
+      x: this.position.x,
+      y: this.position.y,
+      z: this.position.z
+    })
   }
 }
 

@@ -5,7 +5,7 @@ const server = net.createServer();
 const hostname = '127.0.0.1';
 const port = process.argv.slice(2)[0];
 
-const SocketDataHandler = require('./socketDataHandler.js');
+const SocketDataHandler = require('./connection/socketDataHandler.js');
 const ChunkMap = require('./chunkMap.js')
 const PlayerList = require('./playerList.js')
 

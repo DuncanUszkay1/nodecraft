@@ -15,9 +15,9 @@ class SpawnPlayer extends Packet {
     this.dataBuffer = Buffer.concat([
       varIntBuffer(player.eid),
       uuidBuffer(player.uuid),
-      doubleBuffer(player.x),
-      doubleBuffer(player.y),
-      doubleBuffer(player.z),
+      doubleBuffer(player.position.x),
+      doubleBuffer(player.position.y),
+      doubleBuffer(player.position.z),
       floatBuffer(ya),
       floatBuffer(p),
       unsignedByteBuffer(0xff) //Entity Metadata Terminator

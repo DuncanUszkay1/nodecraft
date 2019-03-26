@@ -12,7 +12,10 @@ class BufferGenerators {
     return Buffer.from(uuidParse.parse(uuid))
   }
 
-  static positionBuffer([x,y,z]) {
+  static positionBuffer(position) {
+    var x = position.x
+    var y = position.y
+    var z = position.z
     var firstInt32 = ((x & 0x03FFFFFF) << 6) | ((y & 0x0FC0) >>> 6)
     var secondInt32 = ((y & 0x3F) << 26) | (z & 0x03FFFFFF)
 

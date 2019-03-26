@@ -129,7 +129,22 @@ class ByteStream {
     y = ((first & 0x3F) << 3) | (second >>> 26)
     z = second & 0x03FFFFFF
     this.i += 8
-    return [x, y, z]
+    return {
+      x: x,
+      y: y,
+      z: z
+    }
+  }
+
+  writePosition(position) {
+    var value = position.x << 6
+    value += (position.y & 0xFC) >> 6
+    this.buffer.writeInt32BE(value, this.i)
+    this.i += 4
+    var value = (position.y & 0x3F) << 26
+    value += position.z
+    this.buffer.writeInt32BE(value, this.i)
+    this.i += 4
   }
 
   tail(upTo) {

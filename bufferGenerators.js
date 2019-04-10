@@ -14,7 +14,7 @@ class BufferGenerators {
 
   static positionBuffer(position) {
     var x = position.x
-    var y = position.y
+    var y = position.y ? position.y : 16
     var z = position.z
     var firstInt32 = ((x & 0x03FFFFFF) << 6) | ((y & 0x0FC0) >>> 6)
     var secondInt32 = ((y & 0x3F) << 26) | (z & 0x03FFFFFF)

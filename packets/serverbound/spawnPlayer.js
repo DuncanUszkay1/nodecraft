@@ -1,5 +1,6 @@
 const Packet = require('../../packet.js');
 const ByteStream = require('../../byteStream.js');
+const getEid = require('../../eid.js');
 
 class SpawnPlayer extends Packet {
   constructor(packet){
@@ -7,10 +8,17 @@ class SpawnPlayer extends Packet {
     Object.assign(this, packet)
   }
 
-  localize(x, z) {
+  localize(x, z, eidTable) {
     var bs = new ByteStream(Buffer.from(this.dataBuffer))
-    bs.readVarInt()
-    bs.skipUuid()
+    if(eidTable) {
+      bs.amendVarInt(i => {
+        if(!eidTable.hasOwnProperty(i)) { eidTable[i] = getEid() }
+        return eidTable[i]
+      })
+    } else {
+      bs.readVarInt()
+    }
+    bs.i += 16
     bs.amendDouble(d => d + 16*x)
     bs.readDouble()
     bs.amendDouble(d => d + 16*z)

@@ -1,3 +1,5 @@
+const uuidParse = require("uuid-parse");
+
 class ByteStream {
   constructor(buffer) {
     this.buffer = buffer
@@ -21,7 +23,7 @@ class ByteStream {
     this.i++
   }
 
-  readVarInt() {
+  readVarIntAndSize() {
     var numRead = 0;
     var result = 0;
     do {
@@ -34,7 +36,14 @@ class ByteStream {
             throw new Error("VarInt is too big");
         }
     } while ((read & 0b10000000) != 0);
-    return result;
+    return {
+      result: result,
+      size: numRead
+    }
+  }
+
+  readVarInt() {
+    return this.readVarIntAndSize().result;
   }
 
   writeVarInt(value) {
@@ -46,6 +55,12 @@ class ByteStream {
         }
         this.writeByte(temp);
     } while (value != 0);
+  }
+
+  amendVarInt(f) {
+    var value = this.readVarIntAndSize()
+    this.i -= value.size
+    this.writeVarInt(f(value.result))
   }
 
   writeBlocks(values, blockBits) {
@@ -83,8 +98,26 @@ class ByteStream {
     this.i += 4
   }
 
-  skipUuid() {
+  readUuid(uuid) {
+    var uuidBuffer = Buffer.alloc(16)
+    this.buffer.copy(uuidBuffer, 0, this.i, this.i + 16)
+    return uuidParse.unparse(uuidBuffer)
+  }
+
+  writeUuid(uuid) {
+    Buffer.from(uuidParse.parse(uuid)).copy(this.buffer, this.i)
     this.i += 16
+  }
+
+  readFloat() {
+    var value = this.buffer.readFloatBE(this.i)
+    this.i += 4
+    return value
+  }
+
+  writeFloat(val) {
+    this.buffer.writeFloatBE(val, this.i)
+    this.i += 4
   }
 
   readDouble() {

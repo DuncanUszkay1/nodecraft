@@ -3,12 +3,12 @@ const Packet = require('../../packet')
 const BufferGenerators = require('../../bufferGenerators.js');
 const lengthPrefixedStringBuffer = BufferGenerators.lengthPrefixedStringBuffer;
 
-class LoginStart extends Packet {
+class EndDataHandshake extends Packet {
   constructor(username){
     super()
-    this.packetID = 0
-    this.dataBuffer = lengthPrefixedStringBuffer(username)
+    this.packetID = 0xA1
+    this.dataBuffer = Buffer.alloc(0)
   }
 }
 
-module.exports = LoginStart
+module.exports = EndDataHandshake

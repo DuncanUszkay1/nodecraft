@@ -14,10 +14,8 @@ class BlockChange extends Packet {
   }
 
   localize(x, z) {
-    console.log(this.position)
     this.position.x = x*16 + this.position.x
     this.position.z = z*16 + this.position.z
-    console.log(this.position)
     var bs = new ByteStream(Buffer.from(this.dataBuffer))
     bs.writePosition(this.position)
     this.dataBuffer = bs.buffer

@@ -1,9 +1,9 @@
 const uuid = require('uuid/v1');
+const getEid = require('./eid.js');
 
-var eid = 1
 var spawnX = 8
 var spawnY = 16
-var spawnZ = 8
+var spawnZ = 3
 
 class Player {
   constructor(username, socket) {
@@ -16,8 +16,7 @@ class Player {
       z: spawnZ
     }
     this.oldPosition = {}
-    this.eid = eid
-    eid++
+    this.eid = getEid()
   }
 
   notify(packet) {

@@ -1,37 +1,49 @@
 const Utility = require('../utility.js');
 const net = require('net')
 const log = Utility.log
-const ClientboundHandshake = require('../packets/clientbound/handshake.js');
 const ClientboundLoginStart = require('../packets/clientbound/loginStart.js');
 const LoginStart = require('../packets/serverbound/loginStart.js');
+const ProxyLoginStart = require('../packets/serverbound/proxyLoginStart.js');
 const LoginSuccess = require('../packets/clientbound/loginSuccess.js');
 const SpawnPosition = require('../packets/clientbound/spawnPosition.js');
 const JoinGame = require('../packets/clientbound/joinGame.js');
 const SpawnPlayer = require('../packets/clientbound/spawnPlayer.js');
+const DeleteEntities = require('../packets/clientbound/deleteEntities.js')
 const NewPlayerInfo = require('../packets/clientbound/newPlayerInfo.js');
 const ChunkData = require('../packets/clientbound/chunkData.js');
 const PlayerPosition = require('../packets/clientbound/playerPosition.js');
 const localizePacket = require('../localize.js');
+
+const loadRemote = require('./loadRemote.js');
+
 const Packet = require('../packet.js')
 
 function processLogin(connection, packet) {
   var loginStart = new LoginStart(packet)
-  log(`User ${loginStart.username} is logging in...`)
-  var loginSuccess = new LoginSuccess(loginStart.username)
-  connection.socket.write(loginSuccess.loadIntoBuffer())
-  connection.player = connection.playerList.createPlayer(loginStart.username, connection.socket)
+  createPlayer(connection, loginStart.username)
 }
 
+function processProxyLogin(connection, packet) {
+  var proxyLoginStart = new ProxyLoginStart(packet)
+  createPlayer(connection, proxyLoginStart.username)
+  Object.assign(connection.player.position, proxyLoginStart.position)
+}
+
+function createPlayer(connection, username) {
+  log(`User ${username} is logging in...`)
+  connection.write(new LoginSuccess(username))
+  connection.player = connection.playerList.createPlayer(username, connection.socket)
+}
+
+
 function joinGame(connection) {
-  var joinGame = new JoinGame(connection.player.eid)
-  connection.socket.write(joinGame.loadIntoBuffer())
-  var spawnPosition = new SpawnPosition(connection.player.position.x, connection.player.position.y, connection.player.position.z)
-  connection.socket.write(spawnPosition.loadIntoBuffer())
+  connection.write(new JoinGame(connection.player.eid))
+  connection.write(new SpawnPosition(connection.player.position.x, connection.player.position.y, connection.player.position.z))
 }
 
 function loginNotifyPlayers(connection) {
-  connection.playerList.notify(new NewPlayerInfo([connection.player]).loadIntoBuffer())
-  connection.playerList.notify(new SpawnPlayer(connection.player).loadIntoBuffer())
+  connection.notify(new NewPlayerInfo([connection.player]))
+  connection.notify(new SpawnPlayer(connection.player))
 }
 
 function subscribePlayer(connection) {
@@ -39,71 +51,38 @@ function subscribePlayer(connection) {
 }
 
 function loadArea(connection) {
-  log('Loading server region for new player..')
-  var loadChunk = new ChunkData(0,0)
-  connection.socket.write(loadChunk.loadIntoBuffer())
+  connection.write(new ChunkData(0,0))
 }
 
 function connectToPeers(connection) {
-  log('Connecting to peers..')
-  connection.chunkMap.map((serverInfo, x, z) => {
+  connection.chunkMap.forEach((serverInfo, x, z) => {
     if(serverInfo && !serverInfo.localhost) {
-      serverInfo.connection = connectToPeer(connection, serverInfo, x, z)
-      return serverInfo
-    }
-    return null
-  })
-}
-
-function connectToPeer(connection, serverInfo, x, z) {
-  var addr = serverInfo.addr
-  var port = serverInfo.port
-  var addrPort = `${addr}:${port}`
-  //Note that the non localhost option below is probably wrong
-  var connOptions = serverInfo.localhost ? { port: port } : { port: port, addr: addr }
-  var peer = net.createConnection(connOptions, () => {
-    peer.write(new ClientboundHandshake(404, addrPort, 3).loadIntoBuffer())
-    peer.write(new ClientboundLoginStart(connection.player.username).loadIntoBuffer())
-    subscribeToPeer(connection, peer, x, z)
-  })
-  return peer
-}
-
-function subscribeToPeer(connection, peer, x, z) {
-  peer.on('data', data => {
-    var packet = Packet.loadFromBuffer(data)[0]
-    var localizedPacket = localizePacket(packet, x, z, 0)
-    if(localizedPacket) {
-      connection.socket.write(localizedPacket.loadIntoBuffer())
+      loadRemote(connection, serverInfo, x, z)
     }
   })
 }
+
 
 function placePlayer(connection) {
   var player = connection.player
-  var playerPosition = new PlayerPosition(player.position.x, player.position.y, player.position.z, 0, 0)
-  connection.socket.write(playerPosition.loadIntoBuffer())
+  connection.write(new PlayerPosition(player.position.x, player.position.y, player.position.z, 0, 0))
 }
 
-function handleLogin(connection, packet, local=true) {
+function handleLogin(connection, packet) {
   switch(packet.packetID){
     case 0:
       processLogin(connection,packet)
-      if(local) {
-        joinGame(connection)
-        loginNotifyPlayers(connection)
-      }
+      joinGame(connection)
+      loginNotifyPlayers(connection)
       subscribePlayer(connection)
       loadArea(connection)
-      if(local) {
-        connectToPeers(connection)
-        placePlayer(connection)
-        connection.keepAliveInterval = setInterval(
-          connection.keepAlive.bind(connection),
-          keepAliveSendInterval
-        )
-      }
-      connection.state = local ? 4 : 5
+      connectToPeers(connection)
+      placePlayer(connection)
+      connection.keepAliveInterval = setInterval(
+        connection.keepAlive.bind(connection),
+        keepAliveSendInterval
+      )
+      connection.state = 4
       break;
     default:
       log(`state 2: unexpected packet id ${packet.packetID}`)
@@ -111,15 +90,28 @@ function handleLogin(connection, packet, local=true) {
   }
 }
 
-function handleLocalLogin(connection, packet) {
-  return handleLogin(connection, packet)
+function proxyLogin(connection, packet) {
+  switch(packet.packetID){
+    case 0:
+      processProxyLogin(connection,packet)
+      loginNotifyPlayers(connection)
+      subscribePlayer(connection)
+      connection.state = 7
+      break;
+    default:
+      log(`state 2: unexpected packet id ${packet.packetID}`)
+      break;
+  }
 }
 
-function handleRemoteLogin(connection, packet) {
-  return handleLogin(connection, packet, false)
+function remittanceLogin(connection) {
+  loginNotifyPlayers(connection)
+  subscribePlayer(connection)
+  connection.state = 4
 }
 
 module.exports = {
-  handleRemoteLogin: handleRemoteLogin,
-  handleLocalLogin: handleLocalLogin
+  local: handleLogin,
+  proxy: proxyLogin,
+  remittance: remittanceLogin
 }

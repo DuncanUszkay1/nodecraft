@@ -9,6 +9,10 @@ class ChunkMap {
     this.grid.map(f)
   }
 
+  forEach(f) {
+    this.grid.forEach(f)
+  }
+
   getServer(x,z) {
     return this.grid.get(new Position(x,z))
   }
@@ -44,7 +48,6 @@ class ChunkMap {
             this.nextPositions.push(new Position(this.nextPositions[i].z, this.nextPositions[i].x))
           }
         }
-        console.log(this.nextPositions)
       }
       this.grid.set(nextPosition, serverInfo)
     }
@@ -58,7 +61,11 @@ class ExpandingGrid {
   }
 
   map(f) {
-    this.array.map((arr, x) => arr.map((a, z) => f(a,x - this.size,z - this.size)))
+    this.array = this.array.map((arr, x) => arr.map((a, z) => f(a,x - this.size,z - this.size)))
+  }
+
+  forEach(f) {
+    this.array.forEach((arr, x) => arr.forEach((a, z) => f(a,x - this.size,z - this.size)))
   }
 
   get(pos) {

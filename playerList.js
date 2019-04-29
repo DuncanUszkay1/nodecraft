@@ -2,7 +2,7 @@ const Player = require('./player.js')
 
 class PlayerList {
   constructor() {
-    this.players = []
+    this.players = {}
   }
 
   createPlayer(username, socket) {
@@ -10,11 +10,31 @@ class PlayerList {
   }
 
   addPlayer(player) {
-    this.players.push(player)
+    this.players[player.uuid] = player
+  }
+
+  deletePlayer(player) {
+    delete this.players[player.uuid]
   }
 
   notify(packet, exceptEid) {
-    this.players.filter(player => !exceptEid || player.eid != exceptEid).map(p => p.notify(packet))
+    this.forEach(player => player.notify(packet), exceptEid)
+  }
+
+  forEach(f, exceptEid) {
+    for(var uuid in this.players) {
+      if(!exceptEid || this.players[uuid].eid != exceptEid) {
+        f(this.players[uuid])
+      }
+    }
+  }
+
+  print(f) {
+    var str = ''
+    for(var uuid in this.players) {
+      str += this.players[uuid].username + ','
+    }
+    f(str)
   }
 }
 

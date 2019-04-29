@@ -5,6 +5,7 @@
   "main": "server.js",
   "dependencies": {
     "int64-buffer": "^0.99.1007",
+    "loglevel": "^1.6.1",
     "uuid": "^3.3.2",
     "uuid-parse": "^1.1.0"
   },

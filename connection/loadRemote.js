@@ -17,7 +17,6 @@ function loadRemote(connection, serverInfo, x, z) {
 
 function remoteStateHandshake(connection, socket, x, z, addrPort, serverInfo) {
   socket.on('data', data => {
-    console.log(Packet.loadFromBuffer(data))
     Packet.loadFromBuffer(data).forEach(packet => {
       receivePacket(connection, packet, x, z, serverInfo, socket)
     })
@@ -26,12 +25,11 @@ function remoteStateHandshake(connection, socket, x, z, addrPort, serverInfo) {
 }
 
 function receivePacket(connection, packet, x, z, serverInfo, socket) {
-  console.log(packet.packetID)
   if(!serverInfo.hasOwnProperty("eidTable")) { serverInfo.eidTable = {} }
   if(packet.packetID == 0xA1) {
     socket.destroy()
   } else {
-    connection.write(localizePacket(packet, x, z, serverInfo.eidTable, 0))
+    connection.write(localizePacket.clientbound(packet, x, z, serverInfo.eidTable))
   }
 }
 

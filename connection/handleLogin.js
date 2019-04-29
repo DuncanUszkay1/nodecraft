@@ -1,22 +1,16 @@
-const Utility = require('../utility.js');
 const net = require('net')
-const log = Utility.log
-const ClientboundLoginStart = require('../packets/clientbound/loginStart.js');
+const log = require('loglevel')
+
 const LoginStart = require('../packets/serverbound/loginStart.js');
 const ProxyLoginStart = require('../packets/serverbound/proxyLoginStart.js');
 const LoginSuccess = require('../packets/clientbound/loginSuccess.js');
 const SpawnPosition = require('../packets/clientbound/spawnPosition.js');
 const JoinGame = require('../packets/clientbound/joinGame.js');
 const SpawnPlayer = require('../packets/clientbound/spawnPlayer.js');
-const DeleteEntities = require('../packets/clientbound/deleteEntities.js')
 const NewPlayerInfo = require('../packets/clientbound/newPlayerInfo.js');
 const ChunkData = require('../packets/clientbound/chunkData.js');
 const PlayerPosition = require('../packets/clientbound/playerPosition.js');
-const localizePacket = require('../localize.js');
-
 const loadRemote = require('./loadRemote.js');
-
-const Packet = require('../packet.js')
 
 function processLogin(connection, packet) {
   var loginStart = new LoginStart(packet)
@@ -30,11 +24,10 @@ function processProxyLogin(connection, packet) {
 }
 
 function createPlayer(connection, username) {
-  log(`User ${username} is logging in...`)
+  log.info(`User ${username} is logging in...`)
   connection.write(new LoginSuccess(username))
   connection.player = connection.playerList.createPlayer(username, connection.socket)
 }
-
 
 function joinGame(connection) {
   connection.write(new JoinGame(connection.player.eid))
@@ -62,7 +55,6 @@ function connectToPeers(connection) {
   })
 }
 
-
 function placePlayer(connection) {
   var player = connection.player
   connection.write(new PlayerPosition(player.position.x, player.position.y, player.position.z, 0, 0))
@@ -78,14 +70,11 @@ function handleLogin(connection, packet) {
       loadArea(connection)
       connectToPeers(connection)
       placePlayer(connection)
-      connection.keepAliveInterval = setInterval(
-        connection.keepAlive.bind(connection),
-        keepAliveSendInterval
-      )
+      connection.keepAlive()
       connection.state = 4
       break;
     default:
-      log(`state 2: unexpected packet id ${packet.packetID}`)
+      log.warn(`in local login: unexpected packet id ${packet.packetID}`)
       break;
   }
 }
@@ -99,7 +88,7 @@ function proxyLogin(connection, packet) {
       connection.state = 7
       break;
     default:
-      log(`state 2: unexpected packet id ${packet.packetID}`)
+      log.warn(`in proxy login: unexpected packet id ${packet.packetID}`)
       break;
   }
 }

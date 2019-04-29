@@ -1,21 +1,22 @@
 const Handshake = require('./packets/clientbound/handshake.js');
 const localizePacket = require('./localize.js');
 const Packet = require('./packet.js');
+const log = require('loglevel')
 const protocolVersion = 404
 
 function handlePacket(packet, playerList, x, z, eidTable) {
-  var localizedPacket = localizePacket(packet, x, z, eidTable, 0)
-  playerList.notify(localizedPacket.loadIntoBuffer())
+  var localizedPacket = localizePacket.clientbound(packet, x, z, eidTable)
+  if(localizedPacket) { playerList.notify(localizedPacket.loadIntoBuffer()) }
 }
 
 function peerSocket(socket, playerList, x, z, serverInfo) {
   socket.write(new Handshake(protocolVersion, `${serverInfo.addr}:${serverInfo.port}`, 5).loadIntoBuffer())
 
   socket.on('close', err => {
-    if(err){ console.log('socket closed due to error') } else { console.log('socket closed') }
+    if(err){ log.info('socket closed due to error') } else { log.info('socket closed') }
   })
   socket.on('error', err => {
-    console.log(err)
+    log.info(err)
   })
   socket.on('data', data => {
     Packet.loadFromBuffer(data).forEach(packet => handlePacket(packet, playerList, x, z, serverInfo.eidTable))

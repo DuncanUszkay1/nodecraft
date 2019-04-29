@@ -1,14 +1,6 @@
-const ServerboundPlayerPosition = require('../packets/serverbound/playerPosition.js')
-const ServerboundPlayerPositionAndLook = require('../packets/serverbound/playerPositionAndLook.js')
-const ServerboundBorderCrossing = require('../packets/serverbound/borderCrossing.js')
-const RelativeEntityMove = require('../packets/clientbound/RelativeEntityMove.js')
-const EntityTeleport = require('../packets/clientbound/entityTeleport.js')
-const DeleteEntities = require('../packets/clientbound/deleteEntities.js')
-const BorderCrossing = require('../packets/clientbound/borderCrossing.js')
 const PlayerDigging = require('../packets/serverbound/playerDigging.js')
 const BlockChange = require('../packets/clientbound/blockChange.js')
-const SpawnPlayer = require('../packets/clientbound/spawnPlayer.js');
-const localizePacket = require('../localize.js');
+const RelativeEntityMove = require('../packets/clientbound/RelativeEntityMove.js')
 
 function playerDigging(connection, packet) { //shitlist
   var playerDigging = new PlayerDigging(packet)

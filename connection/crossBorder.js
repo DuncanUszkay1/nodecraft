@@ -2,6 +2,7 @@ const Handshake = require('../packets/clientbound/handshake.js');
 const ProxyLoginStart = require('../packets/clientbound/proxyLoginStart.js');
 const remittanceLogin = require('../connection/handleLogin.js').remittance;
 const net = require('net')
+const log = require('loglevel')
 const protocolVersion = 404
 
 function proxyLogin(connection, server) {
@@ -28,10 +29,10 @@ function proxyLogout(connection) {
 function crossBorder(connection, server, exitingLocal) {
   proxyLogout(connection)
   if(server.localhost) {
-    console.log('remittance')
+    log.info(`${connection.player.username} has returned to the server`)
     remittanceLogin(connection)
   } else {
-    console.log('non-remittance')
+    log.info(`${connection.player.username} has crossed the server border`)
     if(exitingLocal) {
       connection.logout()
     }

@@ -11,17 +11,10 @@ function updatePosition(connection, position) {
   })
 }
 
-function keepAlive(connection, packet) {
-  if (connection.keepAlivePacket && !packet.dataEquals(connection.keepAlivePacket)) {
-    connection.socket.destroy()
-  }
-  connection.keepAliveTimeout.forEach(clearTimeout)
-}
-
 function inspectPacket(connection, packet) {
   switch(packet.packetID) {
     case 0x0E:
-      keepAlive(connection, packet)
+      connection.keepAlivePacket(packet)
       break;
     case 0x10:
     case 0x11:

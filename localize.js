@@ -1,12 +1,21 @@
 const identify = require('./identify.js');
 const Packet = require('./packet.js');
 const LoginSuccess = require('./packets/clientbound/loginSuccess.js');
-const log = require('./utility.js').log
+const log = require('loglevel')
 
-function localizePacket(packet, x, z, eidTable, ctx) { //shitlist: ctx arg?
-  var packetType = identify(packet, ctx)
+function localizeClientboundPacket(packet, x, z, eidTable) {
+  var packetType = identify.clientbound(packet)
+  return localize(packet, packetType, x, z, eidTable)
+}
+
+function localizeServerboundPacket(packet, x, z, eidTable) {
+  var packetType = identify.serverbound(packet)
+  return localize(packet, packetType, x, z, eidTable)
+}
+
+function localize(packet, packetType, x, z, eidTable) {
   if(packetType == LoginSuccess) {
-    log('Successfully logged into peer')
+    log.debug('Successfully logged into peer')
     return null
   } else if(packetType == null) {
     return packet
@@ -16,4 +25,7 @@ function localizePacket(packet, x, z, eidTable, ctx) { //shitlist: ctx arg?
   return parsedPacket
 }
 
-module.exports = localizePacket
+module.exports = {
+  clientbound: localizeClientboundPacket,
+  serverbound: localizeServerboundPacket
+}

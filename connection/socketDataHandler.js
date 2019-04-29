@@ -1,17 +1,11 @@
-const SERVER_LOGGING = true;
 keepAliveSendInterval = 15000
 keepAliveMaxWaitForResponse = 30000
 
-const net = require('net')
-const Utility = require('../utility.js');
-const log = Utility.log
+const log = require('loglevel')
 const Packet = require('../packet.js');
-const KeepAlive = require('../packets/clientbound/keepAlive.js')
-const localizePacket = require('../localize.js');
 const handlePreHandshakePacket = require('./handlePreHandshakePacket.js');
-const DeleteEntities = require('../packets/clientbound/deleteEntities.js')
-
 const handleStatusHandshake = require('./handleStatusHandshake.js');
+const handleLogout = require('./handleLogout.js')
 const handleLogin = require('./handleLogin.js').local;
 const proxyLogin = require('./handleLogin.js').proxy;
 const remoteDataHandshake = require('./remoteDataHandshake.js');
@@ -20,6 +14,7 @@ const crossBorder = require('./crossBorder.js');
 const handleRemotePlayPacket = require('./handleRemotePlayPacket.js');
 const handleLocalPlayPacket = require('./handleLocalPlayPacket.js');
 const inspectPacket = require('./inspectPacket.js');
+const KeepAliveHandler = require('./keepAlive.js');
 
 
 class SocketDataHandler {
@@ -30,7 +25,11 @@ class SocketDataHandler {
       this.eventPipes = eventPipes
       this.chunkPosition = {x:0, z:0}
       this.playerList = playerList
-      this.keepAliveTimeout = []
+      this.keepAliveHandler = new KeepAliveHandler(
+        this,
+        keepAliveSendInterval,
+        keepAliveMaxWaitForResponse
+      )
       this.remoteServer = null
       this.player = null
       this.proxy = null
@@ -42,6 +41,14 @@ class SocketDataHandler {
 
     setProxyServer(proxy) {
       this.proxy = proxy
+    }
+
+    keepAlive() {
+      this.keepAliveHandler.bind()
+    }
+
+    keepAlivePacket(packet) {
+      this.keepAliveHandler.check(packet)
     }
 
     forEachPlayer(f) {
@@ -57,10 +64,7 @@ class SocketDataHandler {
     }
 
     logout() {
-      if(this.player) {
-        this.playerList.deletePlayer(this.player)
-        this.notify(new DeleteEntities([this.player.eid]))
-      }
+      handleLogout(this)
     }
 
     write(packet) {
@@ -69,12 +73,6 @@ class SocketDataHandler {
 
     close() {
       clearInterval(this.keepAliveInterval)
-    }
-
-    keepAlive() {
-      this.keepAlivePacket = new KeepAlive()
-      this.keepAliveTimeout.push(setTimeout(() => this.socket.destroy(), keepAliveMaxWaitForResponse))
-      this.socket.write(this.keepAlivePacket.loadIntoBuffer());
     }
 
     router(packet) {

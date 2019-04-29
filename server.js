@@ -1,14 +1,19 @@
-const Utility = require('./utility.js');
-const log = Utility.log
-const net = require('net');
-const server = net.createServer();
-const hostname = '127.0.0.1';
-const port = process.argv.slice(2)[0];
-
 const SocketDataHandler = require('./connection/socketDataHandler.js');
 const peerSocket = require('./peer.js')
 const ChunkMap = require('./chunkMap.js')
 const PlayerList = require('./playerList.js')
+const log = require('loglevel')
+const net = require('net');
+
+const args = process.argv.slice(2)
+
+const server = net.createServer();
+const hostname = '127.0.0.1';
+const port = args[0];
+
+const verbosity = args[1] ? args[1] : 'info';
+log.setLevel(verbosity)
+
 
 //Hardcoded atm to connect to a paired server
 var peers = [{ port: 8000 + 8001 - port, addr: '127.0.0.1' }]
@@ -16,9 +21,8 @@ var peers = [{ port: 8000 + 8001 - port, addr: '127.0.0.1' }]
 function connectToPeers() {
   chunkMap.map( (p,x,z) => {
     if(p && !p.localhost && !p.connection) {
-      log(p)
       p.connection = net.createConnection(p, () => {
-        log('connected to peer')
+        log.debug(`connected to peer ${p.addr}:${p.port}`)
         peerSocket(p.connection, playerList, x, z, p)
       })
     }
@@ -35,19 +39,26 @@ var playerList = new PlayerList()
 
 var eventPipes = []
 
-var nextEid = 1
+function socketLog(socket, msg) {
+  return `Socket ${socket.remoteAddress}: ${msg}`
+}
 
 server.on('connection', socket => {
   connectToPeers()
-  var handler = new SocketDataHandler(socket, chunkMap, playerList, eventPipes, nextEid)
+  var handler = new SocketDataHandler(socket, chunkMap, playerList, eventPipes)
+  log.debug(socketLog(socket, 'socket opened'))
 
   socket.on('close', err => {
     handler.logout()
     handler.close()
-    if(err){ log('socket closed due to error') } else { log('socket closed') }
+    if(err){
+      log.error(socketLog(socket,'socket closed due to error'))
+    } else {
+      log.debug(socketLog(socket,'socket closed'))
+    }
   })
   socket.on('error', err => {
-    console.log(err)
+    log.error(socketLog(socket,err))
   })
   socket.on('data', data => {
     handler.socketData(data)
@@ -55,9 +66,9 @@ server.on('connection', socket => {
 });
 
 server.on('close', socket => {
-  log('server closed');
+  log.debug('server closed');
 });
 
 server.listen(port, hostname, () => {
-  log('server on');
+  log.debug('server on');
 });

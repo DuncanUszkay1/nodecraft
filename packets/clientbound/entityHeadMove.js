@@ -7,26 +7,16 @@ const angleBuffer = BufferGenerators.angleBuffer;
 const varIntBuffer = BufferGenerators.varIntBuffer;
 const shortBuffer = BufferGenerators.shortBuffer;
 
-class RelativeEntityMove extends Packet {
+class EntityHeadMove extends Packet {
   constructor(player){
     super()
-    this.packetID = 0x29
-    var diffFactor = 128 * 32
-    this.deltaX = (player.position.x - player.oldPosition.x) * diffFactor
-    this.deltaY = (player.position.y - player.oldPosition.y) * diffFactor
-    this.deltaZ = (player.position.z - player.oldPosition.z) * diffFactor
+    this.packetID = 0x39
     this.yaw = player.position.yaw
-    this.pitch = player.position.pitch
     this.dataBuffer = Buffer.concat([
       varIntBuffer(player.eid),
-      shortBuffer(this.deltaX),
-      shortBuffer(this.deltaY),
-      shortBuffer(this.deltaZ),
-      angleBuffer(this.yaw),
-      angleBuffer(this.pitch),
-      unsignedByteBuffer(0)
+      angleBuffer(this.yaw)
     ])
   }
 }
 
-module.exports = RelativeEntityMove
+module.exports = EntityHeadMove

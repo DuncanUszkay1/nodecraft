@@ -4,6 +4,7 @@ const PlayerPosition = require('./packets/serverbound/playerPosition.js');
 const PlayerPositionAndLook = require('./packets/serverbound/playerPositionAndLook.js');
 const EntityTeleport = require('./packets/serverbound/entityTeleport.js');
 const RelativeEntityMove = require('./packets/serverbound/relativeEntityMove.js');
+const EntityHeadMove = require('./packets/serverbound/entityHeadMove.js');
 const LoginSuccess = require('./packets/clientbound/loginSuccess.js');
 const SpawnPlayer = require('./packets/serverbound/spawnPlayer.js');
 const BorderCrossing = require('./packets/serverbound/borderCrossing.js');
@@ -25,6 +26,8 @@ function identifyClientbound(packet) {
       return RelativeEntityMove
     case 0x35:
       return DeleteEntities
+    case 0x39:
+      return EntityHeadMove
     case 0x50:
       return EntityTeleport
     case 0xA0:

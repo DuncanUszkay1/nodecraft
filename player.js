@@ -4,6 +4,8 @@ const getEid = require('./eid.js');
 var spawnX = 8
 var spawnY = 16
 var spawnZ = 3
+var spawnPitch = 64
+var spawnYaw = 64
 
 class Player {
   constructor(username, socket) {
@@ -13,7 +15,9 @@ class Player {
     this.position = {
       x: spawnX,
       y: spawnY,
-      z: spawnZ
+      z: spawnZ,
+      pitch: spawnPitch,
+      yaw: spawnYaw
     }
     this.oldPosition = {}
     this.eid = getEid()
@@ -27,7 +31,9 @@ class Player {
     Object.assign(this.oldPosition, {
       x: this.position.x,
       y: this.position.y,
-      z: this.position.z
+      z: this.position.z,
+      pitch: this.position.pitch,
+      yaw: this.position.yaw
     })
   }
 }

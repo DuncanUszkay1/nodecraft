@@ -58,6 +58,7 @@ function sendRemote(connection, server, packet) {
 function playerDigging(connection, packet) {
   var playerDigging = new PlayerDigging(packet)
   var blockChange = new BlockChange(playerDigging);
+  connection.playerMap.handleDigging(playerDigging.position)
   return blockChange
 }
 

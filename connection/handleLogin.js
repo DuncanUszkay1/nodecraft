@@ -40,7 +40,7 @@ function subscribePlayer(connection) {
 
 function loadArea(connection) {
   log('Loading server region for new player..')
-  var loadChunk = new ChunkData(0,0)
+  var loadChunk = new ChunkData(connection.playerMap)
   connection.socket.write(loadChunk.loadIntoBuffer())
 }
 

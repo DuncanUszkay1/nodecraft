@@ -16,10 +16,11 @@ const handlePlayPacket = require('./handlePlayPacket.js');
 
 
 class SocketDataHandler {
-    constructor(socket, chunkMap, playerList) {
+    constructor(socket, chunkMap, playerMap, playerList) {
       this.state = 0
       this.socket = socket
       this.chunkMap = chunkMap
+      this.playerMap = playerMap
       this.playerList = playerList
       this.keepAliveTimeout = []
       this.remoteServer = null

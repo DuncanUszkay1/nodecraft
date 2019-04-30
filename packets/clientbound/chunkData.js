@@ -1,6 +1,8 @@
+const fs = require('fs')
 const Packet = require('../../packet.js');
 const BufferGenerators = require('../../bufferGenerators.js');
 const ByteStream = require('../../byteStream.js');
+const PlayerMap = require('../../playerMap.js');
 
 const intBuffer = BufferGenerators.intBuffer;
 const unsignedByteBuffer = BufferGenerators.unsignedByteBuffer;
@@ -14,19 +16,10 @@ const numOfLongs = Math.pow(sectionsize,3) * blockBits / 64
 const halfByteSize = Math.pow(sectionsize,3) / 2
 
 class ChunkData extends Packet {
-  constructor(xpos,zpos){
+  constructor(playerMap){
     super()
     this.packetID = 0x22
-    var chunkData = ChunkData.buildChunkData()
-    this.dataBuffer = Buffer.concat([
-      intBuffer(xpos), //position (x coord / 16)
-      intBuffer(zpos), //position (z coord / 16)
-      unsignedByteBuffer(1), //Full Chunk (Bool)
-      varIntBuffer(1), //Primary Bit Mask
-      varIntBuffer(chunkData.length), //Section Data Size
-      chunkData, //Section Data
-      varIntBuffer(0) //Number of block entities
-    ])
+    this.dataBuffer = playerMap.getDataBuffer()
   }
 
   static buildChunkData(){

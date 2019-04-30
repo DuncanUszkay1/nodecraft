@@ -8,16 +8,19 @@ const port = process.argv.slice(2)[0];
 const SocketDataHandler = require('./connection/socketDataHandler.js');
 const ChunkMap = require('./chunkMap.js')
 const PlayerList = require('./playerList.js')
+const PlayerMap = require('./playerMap.js')
 
 var chunkMap = new ChunkMap()
 chunkMap.allocateServer({ port: 8000 + 8001 - port, addr: '127.0.0.1' })
 
 var playerList = new PlayerList()
+var playerMap = new PlayerMap()
 
 server.on('connection', socket => {
-  var handler = new SocketDataHandler(socket, chunkMap, playerList)
+  var handler = new SocketDataHandler(socket, chunkMap, playerMap, playerList)
 
   socket.on('close', err => {
+    handler.playerMap.save()
     handler.close()
     if(err){ log('socket closed due to error') } else { log('socket closed') }
   })

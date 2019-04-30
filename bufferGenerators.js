@@ -41,6 +41,13 @@ function floatBuffer(value) {
   return b
 }
 
+function angleBuffer(value) {
+  value = value % 360
+  value = value < 0 ? value + 360 : value
+  value = Math.floor((value/360) * 256)
+  return unsignedByteBuffer(value)
+}
+
 function doubleBuffer(value) {
   var b = Buffer.alloc(8)
   b.writeDoubleBE(value, 0)
@@ -65,6 +72,12 @@ function unsignedByteBuffer(value) {
   return b
 }
 
+function signedByteBuffer(value) {
+  var b = Buffer.alloc(1)
+  b.writeInt8(value)
+  return b
+}
+
 function varIntSizeOf(x) {
   return x < 2 ? 1 : Math.ceil(Math.log2(x)/7);
 }
@@ -76,10 +89,12 @@ module.exports = {
   varIntBuffer: varIntBuffer,
   arrayBuffer: arrayBuffer,
   floatBuffer: floatBuffer,
+  angleBuffer: angleBuffer,
   doubleBuffer: doubleBuffer,
   intBuffer: intBuffer,
   shortBuffer: shortBuffer,
   unsignedByteBuffer: unsignedByteBuffer,
+  signedByteBuffer: signedByteBuffer,
   varIntSizeOf: varIntSizeOf
 }
 

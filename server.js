@@ -50,7 +50,11 @@ server.on('connection', socket => {
 
   socket.on('close', err => {
     handler.logout()
+<<<<<<< Updated upstream
     handler.close()
+=======
+    socket.destroy()
+>>>>>>> Stashed changes
     if(err){
       log.error(socketLog(socket,'socket closed due to error'))
     } else {

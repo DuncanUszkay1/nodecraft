@@ -64,15 +64,17 @@ class SocketDataHandler {
     }
 
     logout() {
+<<<<<<< Updated upstream
       handleLogout(this)
+=======
+      fullLogout(this)
+      this.keepAliveHandler.destroy()
+      if(this.proxy) { this.proxy.destroy() }
+>>>>>>> Stashed changes
     }
 
     write(packet) {
       this.socket.write(packet.loadIntoBuffer())
-    }
-
-    close() {
-      clearInterval(this.keepAliveInterval)
     }
 
     router(packet) {

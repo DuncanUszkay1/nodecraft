@@ -52,7 +52,6 @@ server.on('connection', socket => {
 
   socket.on('close', err => {
     handler.logout()
-    handler.close()
     socket.destroy()
     if(err){
       log.error(socketLog(socket,'socket closed due to error'))

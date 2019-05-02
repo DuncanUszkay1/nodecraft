@@ -95,15 +95,12 @@ class SocketDataHandler {
 
     logout() {
       fullLogout(this)
+      this.keepAliveHandler.destroy()
       if(this.proxy) { this.proxy.destroy() }
     }
 
     write(packet) {
       this.socket.write(packet.loadIntoBuffer())
-    }
-
-    close() {
-      clearInterval(this.keepAliveInterval)
     }
 
     router(packet) {

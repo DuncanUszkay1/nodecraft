@@ -50,7 +50,7 @@ function crossBorder(connection, server, exitingLocal) {
   } else {
     log.info(`${connection.player.username} has crossed the server border`)
     if(exitingLocal) {
-      connection.logout()
+      connection.anchor()
     }
     proxyLogin(connection, server)
   }

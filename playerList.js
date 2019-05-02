@@ -7,7 +7,9 @@ class PlayerList {
   }
 
   createPlayer(username, socket) {
-    return new Player(username, socket)
+    var player = new Player(username, socket)
+    this.addPlayer(player)
+    return player
   }
 
   addPlayer(player) {

@@ -8,23 +8,26 @@ const handleStatusHandshake = require('./handleStatusHandshake.js');
 const handleLogout = require('./handleLogout.js')
 const handleLogin = require('./handleLogin.js').local;
 const proxyLogin = require('./handleLogin.js').proxy;
-const remoteDataHandshake = require('./remoteDataHandshake.js');
+const serverDataPackets = require('./serverDataPackets.js');
 const getServer = require('./getServer.js');
 const crossBorder = require('./crossBorder.js');
 const handleRemotePlayPacket = require('./handleRemotePlayPacket.js');
 const handleLocalPlayPacket = require('./handleLocalPlayPacket.js');
 const inspectPacket = require('./inspectPacket.js');
 const KeepAliveHandler = require('./keepAlive.js');
+const EndDataHandshake = require('../packets/serverbound/endDataHandshake.js')
 
 
 class SocketDataHandler {
-    constructor(socket, chunkMap, playerList, eventPipes) {
+    constructor(socket, chunkMap, playerList, guestList, anchorList, eventPipes) {
       this.state = 0
       this.socket = socket
       this.chunkMap = chunkMap
       this.eventPipes = eventPipes
       this.chunkPosition = {x:0, z:0}
       this.playerList = playerList
+      this.anchorList = anchorList
+      this.guestList = guestList
       this.keepAliveHandler = new KeepAliveHandler(
         this,
         keepAliveSendInterval,
@@ -51,16 +54,46 @@ class SocketDataHandler {
       this.keepAliveHandler.check(packet)
     }
 
-    forEachPlayer(f) {
-      this.playerList.forEach(f)
+    forEachPlayer(f, exceptEid) {
+      this.playerList.forEach(f, exceptEid)
+      this.guestList.forEach(f, exceptEid)
     }
 
     notify(packet) {
       var packetBuffer = packet.loadIntoBuffer()
       this.playerList.notify(packetBuffer, this.player.eid)
+      this.guestList.notify(packetBuffer, this.player.eid)
+      this.anchorList.notify(packetBuffer, this.player.eid)
       this.eventPipes.forEach(ep => {
         ep.socket.write(packetBuffer)
       })
+    }
+
+    createLocalPlayer(username) {
+      this.player = this.playerList.createPlayer(username, this.socket)
+      log.debug(`adding player ${this.player.username} to players`)
+    }
+
+    createProxyPlayer(username) {
+      this.player = this.guestList.createPlayer(username, this.socket)
+      log.debug(`adding player ${this.player.username} to guests`)
+    }
+
+    removeAnchor() {
+      log.debug(`moving player ${this.player.username} from anchors to players`)
+      this.anchorList.deletePlayer(this.player)
+      this.playerList.addPlayer(this.player)
+    }
+
+    anchor() {
+      log.debug(`moving player ${this.player.username} from players to anchors`)
+      this.anchorList.addPlayer(this.player)
+      this.logout()
+    }
+
+    sendServerData() {
+      var exceptEid = this.state == 6 ? null : this.player.eid
+      serverDataPackets(this, exceptEid).forEach(packet => this.write(packet))
     }
 
     logout() {
@@ -83,7 +116,8 @@ class SocketDataHandler {
             this.setToEventPipe()
           }
           if(this.state == 6) {
-            remoteDataHandshake(this, packet)
+            this.sendServerData()
+            this.write(Packet.write(EndDataHandshake,[]))
           }
           break;
         case 1:

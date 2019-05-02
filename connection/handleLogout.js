@@ -2,13 +2,29 @@ const log = require('loglevel')
 const DeleteEntities = require('../packets/clientbound/deleteEntities.js')
 const Packet = require('../packet.js');
 
-function handleLogout(connection) {
+function removePlayer(connection) {
+  connection.notify(Packet.write(DeleteEntities,[[connection.player.eid]]))
+}
+
+function localLogout(connection) {
   if(connection.player) {
-    log.debug(`Removing ${connection.player.username} from guests or players`)
     connection.playerList.deletePlayer(connection.player)
-    connection.guestList.deletePlayer(connection.player)
-    connection.notify(Packet.write(DeleteEntities,[[connection.player.eid]]))
+    removePlayer(connection)
   }
 }
 
-module.exports = handleLogout
+function fullLogout(connection) {
+  if(connection.player) {
+    log.debug(`User ${connection.player.username} has exited server`)
+    connection.playerList.deletePlayer(connection.player)
+    connection.guestList.deletePlayer(connection.player)
+    connection.anchorList.deletePlayer(connection.player)
+    log.debug(connection.guestList[connection.player.uuid])
+    removePlayer(connection)
+  }
+}
+
+module.exports = {
+  local: localLogout,
+  full: fullLogout
+}

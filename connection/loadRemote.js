@@ -1,5 +1,5 @@
 const net = require('net')
-const Handshake = require('../packets/clientbound/handshake.js');
+const Handshake = require('../packets/serverbound/handshake.js');
 const Packet = require('../packet.js');
 const localizePacket = require('../localize.js');
 
@@ -21,7 +21,7 @@ function remoteStateHandshake(connection, socket, x, z, addrPort, serverInfo) {
       receivePacket(connection, packet, x, z, serverInfo, socket)
     })
   })
-  socket.write(new Handshake(protocolVersion, addrPort, 6).loadIntoBuffer())
+  socket.write(Packet.write(Handshake,[protocolVersion, addrPort, 6]).loadIntoBuffer())
 }
 
 function receivePacket(connection, packet, x, z, serverInfo, socket) {

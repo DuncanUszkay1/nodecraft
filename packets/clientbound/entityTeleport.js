@@ -1,14 +1,9 @@
-const Packet = require('../../packet.js');
-const BufferGenerators= require('../../bufferGenerators.js');
-const doubleBuffer = BufferGenerators.doubleBuffer;
-const floatBuffer = BufferGenerators.floatBuffer;
-const unsignedByteBuffer = BufferGenerators.unsignedByteBuffer;
-const varIntBuffer = BufferGenerators.varIntBuffer;
-const shortBuffer = BufferGenerators.shortBuffer;
+const Packet = require('../base.js');
+const BG = require('../../bufferGenerators.js');
+const ByteStream = require('../../bytestream.js');
 
 class EntityTeleport extends Packet {
-  constructor(player){
-    super()
+  write(player){
     this.packetID = 0x50
     this.x = player.position.x
     this.y = player.position.y
@@ -16,16 +11,24 @@ class EntityTeleport extends Packet {
     this.yaw = 0
     this.pitch = 0
     this.dataBuffer = Buffer.concat([
-      varIntBuffer(player.eid),
-      doubleBuffer(this.x),
-      doubleBuffer(this.y),
-      doubleBuffer(this.z),
-      unsignedByteBuffer(this.yaw),
-      unsignedByteBuffer(this.pitch),
-      unsignedByteBuffer(0)
+      BG.varInt(player.eid),
+      BG.double(this.x),
+      BG.double(this.y),
+      BG.double(this.z),
+      BG.unsignedByte(this.yaw),
+      BG.unsignedByte(this.pitch),
+      BG.unsignedByte(0)
     ])
   }
 
+  localize(x, z) {
+    var bs = new ByteStream(Buffer.from(this.dataBuffer))
+    bs.readVarInt();
+    bs.amendDouble(d => d + x*16)
+    bs.readDouble();
+    bs.amendDouble(d => d + z*16)
+    this.dataBuffer = bs.buffer
+  }
 }
 
 module.exports = EntityTeleport

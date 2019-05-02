@@ -1,13 +1,11 @@
-const Packet = require('../../packet.js');
-const BufferGenerators = require('../../bufferGenerators.js');
-const doubleBuffer = BufferGenerators.doubleBuffer;
+const Packet = require('../base.js');
+const BG = require('../../bufferGenerators.js');
 
 class KeepAlive extends Packet {
-    constructor() {
-        super()
-        this.packetID = 0x21
-        this.dataBuffer = doubleBuffer(Math.random())
-    }
+  write() {
+    this.packetID = 0x21
+    this.dataBuffer = BG.double(Math.random())
+  }
 }
 
 module.exports = KeepAlive

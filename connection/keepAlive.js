@@ -1,4 +1,5 @@
 const KeepAlive = require('../packets/clientbound/keepAlive.js')
+const Packet = require('../packet.js')
 
 class KeepAliveHandler {
   constructor(connection, sendInterval, maxWaitForResponse) {
@@ -24,7 +25,7 @@ class KeepAliveHandler {
   }
 
   keepAlive() {
-    this.packet = new KeepAlive()
+    this.packet = Packet.write(KeepAlive,[])
     this.timeout.push(setTimeout(() => this.connection.logout(), this.maxWaitForResponse))
     this.connection.write(this.packet);
   }

@@ -1,21 +1,26 @@
-const Packet = require('../../packet.js');
-const BufferGenerators= require('../../bufferGenerators.js');
-const doubleBuffer = BufferGenerators.doubleBuffer;
-const floatBuffer = BufferGenerators.floatBuffer;
-const unsignedByteBuffer = BufferGenerators.unsignedByteBuffer;
-const varIntBuffer = BufferGenerators.varIntBuffer;
-const shortBuffer = BufferGenerators.shortBuffer;
+const Packet = require('../base.js');
+const BG = require('../../bufferGenerators.js');
+const ByteStream = require("../../byteStream.js");
 
 class DeleteEntities extends Packet {
-  constructor(entityIDs){
-    super()
+  write(entityIDs) {
     this.packetID = 0x35
     this.dataBuffer = Buffer.concat([
-      varIntBuffer(entityIDs.length),
-      Buffer.concat(entityIDs.map(e => varIntBuffer(e)))
+      BG.varInt(entityIDs.length),
+      Buffer.concat(entityIDs.map(e => BG.varInt(e)))
     ])
   }
 
+  localize(x, z, eidTable) {
+    if(eidTable) {
+      var bs = new ByteStream(Buffer.from(this.dataBuffer))
+      var length = bs.readVarInt()
+      for(var i = 0; i < length; i++) {
+        bs.amendVarInt(i => eidTable[i])
+      }
+      this.dataBuffer = bs.buffer
+    }
+  }
 }
 
 module.exports = DeleteEntities

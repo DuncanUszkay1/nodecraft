@@ -1,19 +1,26 @@
-const Packet = require('../../packet.js');
-const BufferGenerators = require('../../bufferGenerators.js');
+const Packet = require('../base.js');
+const BG = require('../../bufferGenerators.js');
 const ByteStream = require('../../byteStream.js');
 
-const positionBuffer = BufferGenerators.positionBuffer
-const varIntBuffer = BufferGenerators.varIntBuffer
-
 class BlockChange extends Packet {
-  constructor(playerDigging) {
-      super()
-      Object.assign(this, playerDigging)
-      this.packetID = 0x0B
-      this.dataBuffer = Buffer.concat([
-          positionBuffer(playerDigging.position),
-          varIntBuffer(0)
-      ])
+  read(bs) {
+    this.position = bs.readPosition()
+  }
+
+  write(playerDigging) {
+    this.packetID = 0x0B
+    this.dataBuffer = Buffer.concat([
+        BG.position(playerDigging.position),
+        BG.varInt(0)
+    ])
+  }
+
+  localize(x, z) {
+    this.position.x = x*16 + this.position.x
+    this.position.z = z*16 + this.position.z
+    var bs = new ByteStream(Buffer.from(this.dataBuffer))
+    bs.writePosition(this.position)
+    this.dataBuffer = bs.buffer
   }
 }
 

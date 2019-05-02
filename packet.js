@@ -1,27 +1,26 @@
-const BufferGenerators = require('./bufferGenerators.js');
-const ByteStream = require('./byteStream.js');
-const lengthPrefixedStringBuffer = BufferGenerators.lengthPrefixedStringBuffer
-const varIntBuffer = BufferGenerators.varIntBuffer;
+const PacketBase = require('./packets/base.js')
+const ByteStream = require('./byteStream.js')
 
-class Packet {
-  constructor() {
-    this.length = null
-    this.packetID = null
-    this.dataBuffer = Buffer.alloc(0)
-  }
+function read(packetType, packet) {
+  readPacket = new packetType()
+  Object.assign(readPacket, packet)
+  var bs = new ByteStream(Buffer.from(packet.dataBuffer))
+  readPacket.read(bs)
+  return readPacket
+}
 
-  localize(x,z) {}
+function write(packetType, args) {
+  packet = new packetType()
+  packet.write(...args)
+  return packet
+}
 
-  loadStringIntoDataBuffer(str) {
-    this.dataBuffer = lengthPrefixedStringBuffer(str);
-  }
-
-  static loadFromBuffer(buffer) {
+function loadFromBuffer(buffer) {
     var bs = new ByteStream(buffer);
     var packets = []
     var beginningOfNextPacket = 0
     while (!bs.empty()) {
-      var packet = new Packet()
+      var packet = new PacketBase()
       packet.length = bs.readVarInt();
       beginningOfNextPacket = packet.length + bs.i
       packet.packetID = bs.readVarInt();
@@ -31,26 +30,8 @@ class Packet {
     return packets
   }
 
-  loadIntoBuffer() {
-    if(this.packetID == null){
-      throw new Error("Cannot load a packet with a null id into a buffer")
-    }
-    this.length = BufferGenerators.varIntSizeOf(this.packetID) + this.dataBuffer.length
-
-    return Buffer.concat([
-      varIntBuffer(this.length),
-      varIntBuffer(this.packetID),
-      this.dataBuffer
-    ]);
-  }
-
-  dataEquals(otherPacket) {
-    if (this.length != otherPacket.length) {
-      return false;
-    }
-
-    return this.dataBuffer.equals(otherPacket.dataBuffer)
-  }
+module.exports = {
+  read: read,
+  write: write,
+  loadFromBuffer: loadFromBuffer
 }
-
-module.exports = Packet

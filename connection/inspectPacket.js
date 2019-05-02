@@ -1,6 +1,7 @@
 const PlayerPosition = require('../packets/serverbound/playerPosition.js');
 const PlayerPositionAndLook = require('../packets/serverbound/playerPositionAndLook.js');
 const PlayerLook = require('../packets/serverbound/playerLook.js');
+const Packet = require('../packet.js')
 const log = require('loglevel')
 
 function updatePosition(connection, position) {
@@ -18,6 +19,22 @@ function updateLook(connection, position) {
   })
 }
 
+function handlePositionChange(connection, packet) {
+  switch(packet.packetID) {
+    case 0x10:
+      updatePosition(connection, Packet.read(PlayerPosition,packet))
+      break;
+    case 0x11:
+      readPacket = Packet.read(PlayerPositionAndLook,packet)
+      updatePosition(connection, readPacket)
+      updateLook(connection, readPacket)
+      break;
+    case 0x12:
+      updateLook(connection, Packet.read(PlayerLook,packet))
+      break;
+  }
+}
+
 function inspectPacket(connection, packet) {
   switch(packet.packetID) {
     case 0x0E:
@@ -25,18 +42,9 @@ function inspectPacket(connection, packet) {
       break;
     case 0x10:
     case 0x11:
-      connection.player.archivePosition()
-    case 0x10:
-      updatePosition(connection, new PlayerPosition(packet))
-      break;
-    case 0x11:
-      readPacket = new PlayerPositionAndLook(packet)
-      updatePosition(connection, readPacket)
-      updateLook(connection, readPacket)
-      break;
     case 0x12:
-      updateLook(connection, new PlayerLook(packet))
-      break;
+      connection.player.archivePosition()
+      handlePositionChange(connection, packet)
     case 0xA0:
       break;
   }

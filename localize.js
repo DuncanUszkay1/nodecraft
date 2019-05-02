@@ -20,7 +20,7 @@ function localize(packet, packetType, x, z, eidTable) {
   } else if(packetType == null) {
     return packet
   }
-  var parsedPacket = new packetType(packet)
+  var parsedPacket = Packet.read(packetType,packet)
   parsedPacket.localize(x, z, eidTable)
   return parsedPacket
 }

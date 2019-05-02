@@ -1,8 +1,5 @@
-const Packet = require('../../packet.js');
-const BufferGenerators = require('../../bufferGenerators.js');
-const lengthPrefixedStringBuffer = BufferGenerators.lengthPrefixedStringBuffer;
-const intBuffer = BufferGenerators.intBuffer;
-const unsignedByteBuffer = BufferGenerators.unsignedByteBuffer;
+const Packet = require('../base.js');
+const BG = require('../../bufferGenerators.js');
 
 const tempHardcode = {
   gamemode: 1,
@@ -14,8 +11,7 @@ const tempHardcode = {
 }
 
 class JoinGame extends Packet {
-  constructor(eid){
-    super()
+  write(eid){
     this.packetID = 0x25
     this.eid = eid
     this.gamemode = tempHardcode.gamemode
@@ -25,13 +21,13 @@ class JoinGame extends Packet {
     this.levelType = tempHardcode.levelType
     this.reducedDebugInfo = tempHardcode.reducedDebugInfo
     this.dataBuffer = Buffer.concat([
-      intBuffer(this.eid),
-      unsignedByteBuffer(this.gamemode),
-      intBuffer(this.dimension),
-      unsignedByteBuffer(this.difficulty),
-      unsignedByteBuffer(this.maxPlayers),
-      lengthPrefixedStringBuffer(this.levelType),
-      unsignedByteBuffer(this.reducedDebugInfo),
+      BG.int(this.eid),
+      BG.unsignedByte(this.gamemode),
+      BG.int(this.dimension),
+      BG.unsignedByte(this.difficulty),
+      BG.unsignedByte(this.maxPlayers),
+      BG.string(this.levelType),
+      BG.unsignedByte(this.reducedDebugInfo),
     ])
   }
 }

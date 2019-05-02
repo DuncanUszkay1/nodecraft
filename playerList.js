@@ -1,4 +1,5 @@
 const Player = require('./player.js')
+const log = require('loglevel')
 
 class PlayerList {
   constructor() {

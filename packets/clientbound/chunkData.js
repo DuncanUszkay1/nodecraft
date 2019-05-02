@@ -1,11 +1,6 @@
-const Packet = require('../../packet.js');
-const BufferGenerators = require('../../bufferGenerators.js');
+const Packet = require('../base.js');
+const BG = require('../../bufferGenerators.js');
 const ByteStream = require('../../byteStream.js');
-
-const intBuffer = BufferGenerators.intBuffer;
-const unsignedByteBuffer = BufferGenerators.unsignedByteBuffer;
-const varIntBuffer = BufferGenerators.varIntBuffer;
-const arrayBuffer = BufferGenerators.arrayBuffer;
 
 const blockBits = 8
 const sectionsize = 16
@@ -14,18 +9,31 @@ const numOfLongs = Math.pow(sectionsize,3) * blockBits / 64
 const halfByteSize = Math.pow(sectionsize,3) / 2
 
 class ChunkData extends Packet {
-  constructor(xpos,zpos){
-    super()
+  read(bs) {
+    this.x = bs.readInt()
+    this.z = bs.readInt()
+  }
+
+  localize(x, z) {
+    this.x = x - this.x
+    this.z = z - this.z
+    var bs = new ByteStream(Buffer.from(this.dataBuffer))
+    bs.writeInt(this.x)
+    bs.writeInt(this.z)
+    this.dataBuffer = bs.buffer
+  }
+
+  write(xpos,zpos){
     this.packetID = 0x22
     var chunkData = ChunkData.buildChunkData()
     this.dataBuffer = Buffer.concat([
-      intBuffer(xpos), //position (x coord / 16)
-      intBuffer(zpos), //position (z coord / 16)
-      unsignedByteBuffer(1), //Full Chunk (Bool)
-      varIntBuffer(1), //Primary Bit Mask
-      varIntBuffer(chunkData.length), //Section Data Size
+      BG.int(xpos), //position (x coord / 16)
+      BG.int(zpos), //position (z coord / 16)
+      BG.unsignedByte(1), //Full Chunk (Bool)
+      BG.varInt(1), //Primary Bit Mask
+      BG.varInt(chunkData.length), //Section Data Size
       chunkData, //Section Data
-      varIntBuffer(0) //Number of block entities
+      BG.varInt(0) //Number of block entities
     ])
   }
 
@@ -37,7 +45,7 @@ class ChunkData extends Packet {
 
     return Buffer.concat([
       this.buildSection(), //Section Data
-      arrayBuffer(biomes, intBuffer) //Biomes
+      BG.array(biomes, BG.int) //Biomes
     ])
   }
 
@@ -47,8 +55,8 @@ class ChunkData extends Packet {
       palette.push(i)
     }
     return Buffer.concat([
-      varIntBuffer(paletteSize), //Palette Size
-      arrayBuffer(palette, varIntBuffer) //Palette Entries
+      BG.varInt(paletteSize), //Palette Size
+      BG.array(palette, BG.varInt) //Palette Entries
     ])
   }
 
@@ -70,9 +78,9 @@ class ChunkData extends Packet {
       blockLightByteStream.writeByte(0xFF)
     }
     return Buffer.concat([
-      unsignedByteBuffer(blockBits), //Bits per block
+      BG.unsignedByte(blockBits), //Bits per block
       ChunkData.buildPalette(), //Palette
-      varIntBuffer(numOfLongs), //Number of longs in following array
+      BG.varInt(numOfLongs), //Number of longs in following array
       blockByteStream.buffer, //Block data
       blockLightByteStream.buffer, //Block Light
       skyLightByteStream.buffer, //Sky Light

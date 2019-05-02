@@ -25,6 +25,13 @@ class Player {
     log.debug(`created player ${this.username} with eid ${this.eid}`)
   }
 
+  chunkPosition() {
+    return {
+      x: Math.floor(this.position.x/16),
+      z: Math.floor(this.position.z/16)
+    }
+  }
+
   notify(packet) {
     this.socket.write(packet)
   }

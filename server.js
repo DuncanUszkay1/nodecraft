@@ -23,7 +23,7 @@ function connectToPeers() {
     if(p && !p.localhost && !p.connection) {
       p.connection = net.createConnection(p, () => {
         log.debug(`connected to peer ${p.addr}:${p.port}`)
-        peerSocket(p.connection, playerList, x, z, p)
+        peerSocket(p.connection, playerList, anchorList, x, z, p)
       })
     }
     return p
@@ -36,6 +36,8 @@ peers.forEach(peer => {
 })
 
 var playerList = new PlayerList()
+var guestList = new PlayerList()
+var anchorList = new PlayerList()
 
 var eventPipes = []
 
@@ -45,7 +47,7 @@ function socketLog(socket, msg) {
 
 server.on('connection', socket => {
   connectToPeers()
-  var handler = new SocketDataHandler(socket, chunkMap, playerList, eventPipes)
+  var handler = new SocketDataHandler(socket, chunkMap, playerList, guestList, anchorList, eventPipes)
   log.debug(socketLog(socket, 'socket opened'))
 
   socket.on('close', err => {

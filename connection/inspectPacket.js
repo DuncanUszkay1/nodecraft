@@ -45,6 +45,7 @@ function inspectPacket(connection, packet) {
     case 0x12:
       connection.player.archivePosition()
       handlePositionChange(connection, packet)
+      break;
     case 0xA0:
       break;
   }

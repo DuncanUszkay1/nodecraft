@@ -12,22 +12,24 @@ const NewPlayerInfo = require('../packets/clientbound/newPlayerInfo.js');
 const ChunkData = require('../packets/clientbound/chunkData.js');
 const PlayerPosition = require('../packets/clientbound/playerPosition.js');
 const loadRemote = require('./loadRemote.js');
+const serverDataPackets = require('./serverDataPackets.js')
 
 function processLogin(connection, packet) {
   var loginStart = Packet.read(LoginStart,packet)
-  createPlayer(connection, loginStart.username)
+  loginSuccess(connection, loginStart.username)
+  connection.createLocalPlayer(loginStart.username)
 }
 
 function processProxyLogin(connection, packet) {
   var proxyLoginStart = Packet.read(ProxyLoginStart,packet)
-  createPlayer(connection, proxyLoginStart.username)
+  loginSuccess(connection, proxyLoginStart.username)
+  connection.createProxyPlayer(proxyLoginStart.username)
   Object.assign(connection.player.position, proxyLoginStart.position)
 }
 
-function createPlayer(connection, username) {
-  log.info(`User ${username} is logging in...`)
+function loginSuccess(connection, username) {
   connection.write(Packet.write(LoginSuccess,[username]))
-  connection.player = connection.playerList.createPlayer(username, connection.socket)
+  log.info(`User ${username} is logging in...`)
 }
 
 function joinGame(connection) {
@@ -40,12 +42,8 @@ function loginNotifyPlayers(connection) {
   connection.notify(Packet.write(SpawnPlayer,[connection.player]))
 }
 
-function subscribePlayer(connection) {
-  connection.playerList.addPlayer(connection.player)
-}
-
-function loadArea(connection) {
-  connection.write(Packet.write(ChunkData,[0,0]))
+function loadServerData(connection) {
+  connection.sendServerData()
 }
 
 function connectToPeers(connection) {
@@ -67,8 +65,7 @@ function handleLogin(connection, packet) {
       processLogin(connection,packet)
       joinGame(connection)
       loginNotifyPlayers(connection)
-      subscribePlayer(connection)
-      loadArea(connection)
+      loadServerData(connection)
       connectToPeers(connection)
       placePlayer(connection)
       connection.keepAlive()
@@ -85,7 +82,6 @@ function proxyLogin(connection, packet) {
     case 0:
       processProxyLogin(connection,packet)
       loginNotifyPlayers(connection)
-      subscribePlayer(connection)
       connection.state = 7
       break;
     default:
@@ -95,8 +91,8 @@ function proxyLogin(connection, packet) {
 }
 
 function remittanceLogin(connection) {
+  connection.removeAnchor()
   loginNotifyPlayers(connection)
-  subscribePlayer(connection)
   connection.state = 4
 }
 

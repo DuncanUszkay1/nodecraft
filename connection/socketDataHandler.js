@@ -5,7 +5,8 @@ const log = require('loglevel')
 const Packet = require('../packet.js');
 const handlePreHandshakePacket = require('./handlePreHandshakePacket.js');
 const handleStatusHandshake = require('./handleStatusHandshake.js');
-const handleLogout = require('./handleLogout.js')
+const localLogout = require('./handleLogout.js').local
+const fullLogout = require('./handleLogout.js').full
 const handleLogin = require('./handleLogin.js').local;
 const proxyLogin = require('./handleLogin.js').proxy;
 const serverDataPackets = require('./serverDataPackets.js');
@@ -71,24 +72,20 @@ class SocketDataHandler {
 
     createLocalPlayer(username) {
       this.player = this.playerList.createPlayer(username, this.socket)
-      log.debug(`adding player ${this.player.username} to players`)
     }
 
     createProxyPlayer(username) {
       this.player = this.guestList.createPlayer(username, this.socket)
-      log.debug(`adding player ${this.player.username} to guests`)
     }
 
     removeAnchor() {
-      log.debug(`moving player ${this.player.username} from anchors to players`)
       this.anchorList.deletePlayer(this.player)
       this.playerList.addPlayer(this.player)
     }
 
     anchor() {
-      log.debug(`moving player ${this.player.username} from players to anchors`)
       this.anchorList.addPlayer(this.player)
-      this.logout()
+      localLogout(this)
     }
 
     sendServerData() {
@@ -97,7 +94,8 @@ class SocketDataHandler {
     }
 
     logout() {
-      handleLogout(this)
+      fullLogout(this)
+      if(this.proxy) { this.proxy.destroy() }
     }
 
     write(packet) {

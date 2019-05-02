@@ -1,22 +1,17 @@
-const Packet = require('../../packet.js');
-const BufferGenerators= require('../../bufferGenerators.js');
-const doubleBuffer = BufferGenerators.doubleBuffer;
-const floatBuffer = BufferGenerators.floatBuffer;
-const unsignedByteBuffer = BufferGenerators.unsignedByteBuffer;
-const varIntBuffer = BufferGenerators.varIntBuffer;
+const Packet = require('../base.js');
+const BG = require('../../bufferGenerators.js');
 
 class PlayerPosition extends Packet {
-  constructor(x,y,z,ya,p){
-    super()
+  write(x,y,z,ya,p){
     this.packetID = 0x32
     this.dataBuffer = Buffer.concat([
-      doubleBuffer(x),
-      doubleBuffer(y),
-      doubleBuffer(z),
-      floatBuffer(ya),
-      floatBuffer(p),
-      unsignedByteBuffer(0),
-      varIntBuffer(42)
+      BG.double(x),
+      BG.double(y),
+      BG.double(z),
+      BG.float(ya),
+      BG.float(p),
+      BG.unsignedByte(0),
+      BG.varInt(42)
     ])
   }
 }

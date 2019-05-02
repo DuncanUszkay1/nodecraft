@@ -1,13 +1,11 @@
-const Packet = require('../../packet.js');
-const BufferGenerators= require('../../bufferGenerators.js');
-const lengthPrefixedStringBuffer = BufferGenerators.lengthPrefixedStringBuffer;
+const Packet = require('../base.js');
+const BG = require('../../bufferGenerators.js');
 
 class StatusResponse extends Packet {
-  constructor(serverStatus){
-    super()
+  write(serverStatus){
     this.packetID = 0
     this.serverStatus = serverStatus
-    this.dataBuffer = lengthPrefixedStringBuffer(serverStatus)
+    this.data = BG.string(serverStatus)
   }
 }
 

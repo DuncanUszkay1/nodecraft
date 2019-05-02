@@ -1,13 +1,19 @@
 const ByteStream = require('../../byteStream.js');
-const Packet = require('../../packet')
+const Packet = require('../base.js')
+const BG = require('../../bufferGenerators.js');
 
 class ProxyLoginStart extends Packet {
-  constructor(packet){
-    super()
-    Object.assign(this, packet)
-    var bs = new ByteStream(Buffer.from(packet.dataBuffer))
+  read(bs) {
     this.username = bs.readString()
     this.position = bs.readPosition()
+  }
+
+  write(username, position){
+    this.packetID = 0
+    this.dataBuffer = Buffer.concat([
+      BG.string(username),
+      BG.position(position)
+    ])
   }
 }
 

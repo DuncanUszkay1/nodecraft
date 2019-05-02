@@ -1,5 +1,6 @@
 const uuid = require('uuid/v1');
 const getEid = require('./eid.js');
+const log = require('loglevel')
 
 var spawnX = 8
 var spawnY = 16
@@ -21,6 +22,7 @@ class Player {
     }
     this.oldPosition = {}
     this.eid = getEid()
+    log.debug(`created player ${this.username} with eid ${this.eid}`)
   }
 
   notify(packet) {

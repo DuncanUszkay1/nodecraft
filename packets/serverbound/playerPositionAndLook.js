@@ -1,11 +1,8 @@
 const ByteStream = require('../../byteStream.js');
-const Packet = require('../../packet.js');
+const Packet = require('../base.js');
 
 class PlayerPositionAndLook extends Packet {
-  constructor(packet){
-    super()
-    Object.assign(this, packet)
-    var bs = new ByteStream(Buffer.from(packet.dataBuffer))
+  read(bs) {
     this.x = bs.readDouble()
     this.y = bs.readDouble()
     this.z = bs.readDouble()

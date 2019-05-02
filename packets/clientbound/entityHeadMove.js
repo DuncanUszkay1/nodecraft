@@ -1,21 +1,21 @@
-const Packet = require('../../packet.js');
-const BufferGenerators= require('../../bufferGenerators.js');
-const doubleBuffer = BufferGenerators.doubleBuffer;
-const floatBuffer = BufferGenerators.floatBuffer;
-const unsignedByteBuffer = BufferGenerators.unsignedByteBuffer;
-const angleBuffer = BufferGenerators.angleBuffer;
-const varIntBuffer = BufferGenerators.varIntBuffer;
-const shortBuffer = BufferGenerators.shortBuffer;
+const Packet = require('../base.js');
+const BG = require('../../bufferGenerators.js');
+const ByteStream = require("../../byteStream.js");
 
 class EntityHeadMove extends Packet {
-  constructor(player){
-    super()
+  write(player){
     this.packetID = 0x39
     this.yaw = player.position.yaw
     this.dataBuffer = Buffer.concat([
-      varIntBuffer(player.eid),
-      angleBuffer(this.yaw)
+      BG.varInt(player.eid),
+      BG.angle(this.yaw)
     ])
+  }
+
+  localize(x, z, eidTable) {
+    var bs = new ByteStream(Buffer.from(this.dataBuffer))
+    bs.amendVarInt(i => eidTable[i])
+    this.dataBuffer = bs.buffer
   }
 }
 

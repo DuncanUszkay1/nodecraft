@@ -1,6 +1,7 @@
 const net = require('net')
 const log = require('loglevel')
 
+const Packet = require('../packet.js')
 const LoginStart = require('../packets/serverbound/loginStart.js');
 const ProxyLoginStart = require('../packets/serverbound/proxyLoginStart.js');
 const LoginSuccess = require('../packets/clientbound/loginSuccess.js');
@@ -13,30 +14,30 @@ const PlayerPosition = require('../packets/clientbound/playerPosition.js');
 const loadRemote = require('./loadRemote.js');
 
 function processLogin(connection, packet) {
-  var loginStart = new LoginStart(packet)
+  var loginStart = Packet.read(LoginStart,packet)
   createPlayer(connection, loginStart.username)
 }
 
 function processProxyLogin(connection, packet) {
-  var proxyLoginStart = new ProxyLoginStart(packet)
+  var proxyLoginStart = Packet.read(ProxyLoginStart,packet)
   createPlayer(connection, proxyLoginStart.username)
   Object.assign(connection.player.position, proxyLoginStart.position)
 }
 
 function createPlayer(connection, username) {
   log.info(`User ${username} is logging in...`)
-  connection.write(new LoginSuccess(username))
+  connection.write(Packet.write(LoginSuccess,[username]))
   connection.player = connection.playerList.createPlayer(username, connection.socket)
 }
 
 function joinGame(connection) {
-  connection.write(new JoinGame(connection.player.eid))
-  connection.write(new SpawnPosition(connection.player.position.x, connection.player.position.y, connection.player.position.z))
+  connection.write(Packet.write(JoinGame,[connection.player.eid]))
+  connection.write(Packet.write(SpawnPosition,[connection.player.position.x, connection.player.position.y, connection.player.position.z]))
 }
 
 function loginNotifyPlayers(connection) {
-  connection.notify(new NewPlayerInfo([connection.player]))
-  connection.notify(new SpawnPlayer(connection.player))
+  connection.notify(Packet.write(NewPlayerInfo,[[connection.player]]))
+  connection.notify(Packet.write(SpawnPlayer,[connection.player]))
 }
 
 function subscribePlayer(connection) {
@@ -44,7 +45,7 @@ function subscribePlayer(connection) {
 }
 
 function loadArea(connection) {
-  connection.write(new ChunkData(0,0))
+  connection.write(Packet.write(ChunkData,[0,0]))
 }
 
 function connectToPeers(connection) {
@@ -57,7 +58,7 @@ function connectToPeers(connection) {
 
 function placePlayer(connection) {
   var player = connection.player
-  connection.write(new PlayerPosition(player.position.x, player.position.y, player.position.z, 0, 0))
+  connection.write(Packet.write(PlayerPosition,[player.position.x, player.position.y, player.position.z, 0, 0]))
 }
 
 function handleLogin(connection, packet) {

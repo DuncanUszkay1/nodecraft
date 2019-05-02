@@ -1,18 +1,15 @@
 const uuid = require('uuid/v1');
-const Packet = require('../../packet.js');
-const BufferGenerators = require('../../bufferGenerators.js');
-
-const lengthPrefixedStringBuffer = BufferGenerators.lengthPrefixedStringBuffer;
+const Packet = require('../base.js');
+const BG = require('../../bufferGenerators.js');
 
 class LoginSuccess extends Packet {
-  constructor(username){
-    super()
+  write(username){
     this.packetID = 2
     this.uuid = uuid();
     this.username = username
     this.dataBuffer = Buffer.concat([
-      lengthPrefixedStringBuffer(this.uuid),
-      lengthPrefixedStringBuffer(this.username)
+      BG.string(this.uuid),
+      BG.string(this.username)
     ])
   }
 }

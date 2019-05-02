@@ -1,5 +1,6 @@
 const log = require('loglevel')
 const StatusResponse = require('../packets/clientbound/statusResponse.js');
+const Packet = require('../packet.js')
 
 const sampleStatus = `{
     "version": {
@@ -19,12 +20,12 @@ const sampleStatus = `{
 function handleStatusHandshake(connection, packet) {
   switch(packet.packetID) {
     case 0:
-      var statusResponse = new StatusResponse(sampleStatus)
+      var statusResponse = Packet.write(StatusResponse,[sampleStatus])
       log.debug(`sending status..`)
-      connection.socket.write(statusResponse.loadIntoBuffer())
+      connection.write(statusResponse)
       break;
     case 1:
-      connection.socket.write(packet.loadIntoBuffer())
+      connection.write(packet)
       break;
     default:
       log.error(`unexpected packet id ${packet.packetID}`)

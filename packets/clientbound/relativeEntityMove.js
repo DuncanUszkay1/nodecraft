@@ -1,15 +1,9 @@
-const Packet = require('../../packet.js');
-const BufferGenerators= require('../../bufferGenerators.js');
-const doubleBuffer = BufferGenerators.doubleBuffer;
-const floatBuffer = BufferGenerators.floatBuffer;
-const unsignedByteBuffer = BufferGenerators.unsignedByteBuffer;
-const angleBuffer = BufferGenerators.angleBuffer;
-const varIntBuffer = BufferGenerators.varIntBuffer;
-const shortBuffer = BufferGenerators.shortBuffer;
+const Packet = require('../base.js');
+const BG = require('../../bufferGenerators.js');
+const ByteStream = require("../../byteStream.js");
 
 class RelativeEntityMove extends Packet {
-  constructor(player){
-    super()
+  write(player){
     this.packetID = 0x29
     var diffFactor = 128 * 32
     this.deltaX = (player.position.x - player.oldPosition.x) * diffFactor
@@ -18,14 +12,20 @@ class RelativeEntityMove extends Packet {
     this.yaw = player.position.yaw
     this.pitch = player.position.pitch
     this.dataBuffer = Buffer.concat([
-      varIntBuffer(player.eid),
-      shortBuffer(this.deltaX),
-      shortBuffer(this.deltaY),
-      shortBuffer(this.deltaZ),
-      angleBuffer(this.yaw),
-      angleBuffer(this.pitch),
-      unsignedByteBuffer(0)
+      BG.varInt(player.eid),
+      BG.short(this.deltaX),
+      BG.short(this.deltaY),
+      BG.short(this.deltaZ),
+      BG.angle(this.yaw),
+      BG.angle(this.pitch),
+      BG.unsignedByte(0)
     ])
+  }
+
+  localize(x, z, eidTable) {
+    var bs = new ByteStream(Buffer.from(this.dataBuffer))
+    bs.amendVarInt(i => eidTable[i])
+    this.dataBuffer = bs.buffer
   }
 }
 

@@ -1,11 +1,7 @@
-const ByteStream = require('../../byteStream.js');
-const Packet = require('../../packet')
-const BufferGenerators = require('../../bufferGenerators.js');
-const lengthPrefixedStringBuffer = BufferGenerators.lengthPrefixedStringBuffer;
+const Packet = require('../base.js');
 
 class EndDataHandshake extends Packet {
-  constructor(username){
-    super()
+  write(username){
     this.packetID = 0xA1
     this.dataBuffer = Buffer.alloc(0)
   }

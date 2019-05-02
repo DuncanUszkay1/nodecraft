@@ -1,16 +1,27 @@
-const Packet = require('../../packet.js');
-const ByteStream = require('../../byteStream.js');
+const Packet = require('../base.js');
+const BG = require('../../bufferGenerators.js');
 
 class BorderCrossing extends Packet {
-  constructor(packet){
-    super()
-    Object.assign(this, packet)
-    var bs = new ByteStream(Buffer.from(this.dataBuffer))
+  read(bs) {
     bs.readVarInt()
     this.x = bs.readDouble()
     this.y = bs.readDouble()
     this.z = bs.readDouble()
   }
+
+  write(player){
+    this.packetID = 0xA0
+    this.x = player.position.x
+    this.y = player.position.y
+    this.z = 0
+    this.dataBuffer = Buffer.concat([
+      BG.varInt(player.eid),
+      BG.double(this.x),
+      BG.double(this.y),
+      BG.double(this.z)
+    ])
+  }
+
 }
 
 module.exports = BorderCrossing

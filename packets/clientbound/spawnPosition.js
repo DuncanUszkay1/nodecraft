@@ -1,12 +1,10 @@
-const Packet = require('../../packet.js');
-const BufferGenerators= require('../../bufferGenerators.js');
-const positionBuffer = BufferGenerators.positionBuffer;
+const Packet = require('../base.js');
+const BG = require('../../bufferGenerators.js');
 
 class SpawnPosition extends Packet {
-  constructor(x,y,z){
-    super()
+  write(x,y,z){
     this.packetID = 0x49
-    this.dataBuffer = positionBuffer([x,y,z])
+    this.dataBuffer = BG.position([x,y,z])
   }
 }
 

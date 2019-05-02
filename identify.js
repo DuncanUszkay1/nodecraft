@@ -1,17 +1,18 @@
 const Packet = require('./packet.js');
-const ChunkData = require('./packets/serverbound/chunkData.js');
+const ChunkData = require('./packets/clientbound/chunkData.js');
 const PlayerPosition = require('./packets/serverbound/playerPosition.js');
 const PlayerPositionAndLook = require('./packets/serverbound/playerPositionAndLook.js');
-const EntityTeleport = require('./packets/serverbound/entityTeleport.js');
-const RelativeEntityMove = require('./packets/serverbound/relativeEntityMove.js');
-const EntityHeadMove = require('./packets/serverbound/entityHeadMove.js');
+const PlayerLook = require('./packets/serverbound/playerLook.js');
+const EntityTeleport = require('./packets/clientbound/entityTeleport.js');
+const RelativeEntityMove = require('./packets/clientbound/relativeEntityMove.js');
+const EntityHeadMove = require('./packets/clientbound/entityHeadMove.js');
 const LoginSuccess = require('./packets/clientbound/loginSuccess.js');
-const SpawnPlayer = require('./packets/serverbound/spawnPlayer.js');
+const SpawnPlayer = require('./packets/clientbound/spawnPlayer.js');
 const BorderCrossing = require('./packets/serverbound/borderCrossing.js');
 const PlayerDigging = require('./packets/serverbound/playerDigging.js');
-const NewPlayerInfo = require('./packets/serverbound/newPlayerInfo.js');
-const DeleteEntities = require('./packets/serverbound/deleteEntities.js');
-const BlockChange = require('./packets/serverbound/blockChange.js');
+const NewPlayerInfo = require('./packets/clientbound/newPlayerInfo.js');
+const DeleteEntities = require('./packets/clientbound/deleteEntities.js');
+const BlockChange = require('./packets/clientbound/blockChange.js');
 const log = require('loglevel')
 
 function identifyClientbound(packet) {
@@ -49,6 +50,8 @@ function identifyServerbound(packet) {
       return PlayerPosition
     case 0x11:
       return PlayerPositionAndLook
+    case 0x12:
+      return PlayerLook
     case 0x18:
       return PlayerDigging
     default:

@@ -1,4 +1,5 @@
 const uuidParse = require("uuid-parse");
+const Item = require("./player/item.js");
 
 class ByteStream {
   constructor(buffer) {
@@ -120,6 +121,12 @@ class ByteStream {
     this.i += 4
   }
 
+  readShort() {
+    var value = this.buffer.readInt16BE(this.i)
+    this.i += 2
+    return value
+  }
+
   readDouble() {
     var value = this.buffer.readDoubleBE(this.i)
     this.i += 8
@@ -178,6 +185,17 @@ class ByteStream {
     value += position.z
     this.buffer.writeInt32BE(value, this.i)
     this.i += 4
+  }
+
+  readItem() {
+    var present = this.readByte()
+    if(present){
+      var itemID = this.readVarInt()
+      var itemCount = this.readVarInt()
+      return new Item(present, itemID, itemCount)
+    } else {
+      return new Item(present)
+    }
   }
 
   tail(upTo) {

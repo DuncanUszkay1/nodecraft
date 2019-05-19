@@ -8,6 +8,7 @@ const LoginSuccess = require('../packets/clientbound/loginSuccess.js');
 const SpawnPosition = require('../packets/clientbound/spawnPosition.js');
 const JoinGame = require('../packets/clientbound/joinGame.js');
 const SpawnPlayer = require('../packets/clientbound/spawnPlayer.js');
+const WindowItems = require('../packets/clientbound/windowItems.js');
 const NewPlayerInfo = require('../packets/clientbound/newPlayerInfo.js');
 const ChunkData = require('../packets/clientbound/chunkData.js');
 const PlayerPosition = require('../packets/clientbound/playerPosition.js');
@@ -35,6 +36,10 @@ function loginSuccess(connection, username) {
 function joinGame(connection) {
   connection.write(Packet.write(JoinGame,[connection.player.eid]))
   connection.write(Packet.write(SpawnPosition,[connection.player.position.x, connection.player.position.y, connection.player.position.z]))
+}
+
+function loadInventory(connection) {
+  connection.write(Packet.write(WindowItems,[0,connection.player.inventorySlots()]))
 }
 
 function loginNotifyPlayers(connection) {
@@ -67,6 +72,7 @@ function handleLogin(connection, packet) {
       loginNotifyPlayers(connection)
       loadServerData(connection)
       connectToPeers(connection)
+      loadInventory(connection)
       placePlayer(connection)
       connection.keepAlive()
       connection.state = 4

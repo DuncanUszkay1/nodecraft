@@ -48,6 +48,18 @@ function angle(value) {
   return unsignedByte(value)
 }
 
+function slot(value) {
+  buf = value.present ?
+    Buffer.concat([
+      unsignedByte(value.present),
+      varInt(value.id),
+      unsignedByte(value.count),
+      unsignedByte(0) //blank nbt
+    ]) :
+    unsignedByte(value.present)
+  return buf
+}
+
 function double(value) {
   var b = Buffer.alloc(8)
   b.writeDoubleBE(value, 0)
@@ -90,6 +102,7 @@ module.exports = {
   array: array,
   float: float,
   angle: angle,
+  slot: slot,
   double: double,
   int: int,
   short: short,

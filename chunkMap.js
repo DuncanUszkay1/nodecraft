@@ -13,14 +13,24 @@ class ChunkMap {
     this.grid.forEach(f)
   }
 
-  getServer(x,z) {
-    return this.grid.get(new Position(x,z))
+  getServer(position) {
+    return this.grid.get(position)
+  }
+
+  disconnect(serverInfo) {
+    this.grid.map((s,x,z) => {
+      if(s == null || s.addr != serverInfo.addr || s.port != serverInfo.port) return s
+      if(s.connection) s.connection.destroy()
+      this.emptyPositions.push(new Position(x,z))
+      return null
+    })
   }
 
   allocateServer(serverInfo) {
     var emptyPosition = this.emptyPositions.pop()
     if(emptyPosition) {
       this.grid.set(emptyPosition, serverInfo)
+      return emptyPosition
     } else {
       var nextPosition = this.nextPositions.pop()
       if(this.nextPositions.length == 0) {
@@ -50,6 +60,7 @@ class ChunkMap {
         }
       }
       this.grid.set(nextPosition, serverInfo)
+      return nextPosition
     }
   }
 }

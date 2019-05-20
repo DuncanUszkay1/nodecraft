@@ -16,7 +16,7 @@ function getServer(connection) {
   var crossing = borderCrossing(connection)
   return {
     exitingLocal: exitingLocal,
-    server: connection.chunkMap.getServer(connection.chunkPosition.x, connection.chunkPosition.z),
+    server: connection.chunkMap.getServer(connection.chunkPosition),
     borderCrossing: crossing
   }
 }

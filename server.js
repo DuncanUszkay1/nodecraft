@@ -14,9 +14,12 @@ const port = args[0];
 const verbosity = args[1] ? args[1] : 'info';
 log.setLevel(verbosity)
 
+var peers = loadFromPeerConfig()
 
-//Hardcoded atm to connect to a paired server
-var peers = [{ port: 8000 + 8001 - port, addr: '127.0.0.1' }]
+function loadFromPeerConfig() {
+  //will eventually read from txt file probably
+  return []
+}
 
 function connectToPeers() {
   chunkMap.map( (p,x,z) => {

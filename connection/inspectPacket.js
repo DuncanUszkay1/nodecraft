@@ -5,6 +5,7 @@ const Packet = require('../packet.js')
 const log = require('loglevel')
 
 function updatePosition(connection, position) {
+  if(position.y == 0) logtrace(position.y)
   Object.assign(connection.player.position, {
     x: position.x,
     y: position.y,

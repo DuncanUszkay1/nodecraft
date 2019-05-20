@@ -16,7 +16,7 @@ class DeleteEntities extends Packet {
       var bs = new ByteStream(Buffer.from(this.dataBuffer))
       var length = bs.readVarInt()
       for(var i = 0; i < length; i++) {
-        bs.amendVarInt(i => eidTable[i])
+        bs.amendVarInt(eid => eidTable[eid])
       }
       this.dataBuffer = bs.buffer
     }

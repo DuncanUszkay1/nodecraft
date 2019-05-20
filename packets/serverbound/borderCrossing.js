@@ -13,7 +13,7 @@ class BorderCrossing extends Packet {
     this.packetID = 0xA0
     this.x = player.position.x
     this.y = player.position.y
-    this.z = 0
+    this.z = player.position.z
     this.dataBuffer = Buffer.concat([
       BG.varInt(player.eid),
       BG.double(this.x),

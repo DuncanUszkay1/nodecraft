@@ -17,6 +17,8 @@ const handleLocalPlayPacket = require('./handleLocalPlayPacket.js');
 const inspectPacket = require('./inspectPacket.js');
 const KeepAliveHandler = require('./keepAlive.js');
 const EndDataHandshake = require('../packets/serverbound/endDataHandshake.js')
+const RelativeEntityMove = require('../packets/clientbound/RelativeEntityMove.js')
+const EntityHeadMove = require('../packets/clientbound/entityHeadMove.js')
 
 
 class SocketDataHandler {
@@ -70,6 +72,13 @@ class SocketDataHandler {
       })
     }
 
+    localNotify(packet) {
+      var packetBuffer = packet.loadIntoBuffer()
+      this.playerList.notify(packetBuffer)
+      this.anchorList.notify(packetBuffer)
+    }
+
+
     createLocalPlayer(username) {
       this.player = this.playerList.createPlayer(username, this.socket)
     }
@@ -91,6 +100,11 @@ class SocketDataHandler {
     sendServerData() {
       var exceptEid = this.state == 6 ? null : this.player.eid
       serverDataPackets(this, exceptEid).forEach(packet => this.write(packet))
+    }
+
+    updatePlayerMovement() {
+      this.notify(Packet.write(RelativeEntityMove,[this.player]))
+      this.notify(Packet.write(EntityHeadMove,[this.player]))
     }
 
     logout() {
@@ -133,7 +147,13 @@ class SocketDataHandler {
           if(serverRetrival.server.localhost) {
             handleLocalPlayPacket(this, packet)
           } else {
-            handleRemotePlayPacket(this, serverRetrival.server, packet)
+            handleRemotePlayPacket(
+              this,
+              serverRetrival.server,
+              this.chunkPosition.x,
+              this.chunkPosition.z,
+              packet
+            )
           }
           break;
         case 6:

@@ -3,41 +3,33 @@ const PlayerDigging = require('../packets/serverbound/playerDigging.js')
 const ClickWindow = require('../packets/serverbound/clickWindow.js')
 const CreativeClickWindow = require('../packets/serverbound/creativeClickWindow.js')
 const ChangeHeldItem = require('../packets/serverbound/changeHeldItem.js')
+const ChatMessage = require('../packets/serverbound/chatMessage.js')
 const BlockChange = require('../packets/clientbound/blockChange.js')
-const RelativeEntityMove = require('../packets/clientbound/RelativeEntityMove.js')
-const EntityHeadMove = require('../packets/clientbound/entityHeadMove.js')
+const applyChatCommand = require('./chatCommands.js')
 
-function playerDigging(packet) { //shitlist
-  var playerDigging = Packet.read(PlayerDigging,packet)
-  var blockChange = Packet.write(BlockChange,[playerDigging]);
-  return blockChange
-}
-
-function clickWindow(packet) {
-  var clickWindow = Packet.read(ClickWindow,packet)
-  console.log(clickWindow)
+const reactions = {
+  0x02: (connection, packet) => {
+    applyChatCommand(connection, Packet.read(ChatMessage, packet).msg)
+  },
+  0x10: (connection, packet) => { connection.updatePlayerMovement() },
+  0x11: (connection, packet) => { connection.updatePlayerMovement() },
+  0x12: (connection, packet) => { connection.updatePlayerMovement() },
+  0x18: (connection, packet) => {
+    var playerDigging = Packet.read(PlayerDigging,packet)
+    var blockChange = Packet.write(BlockChange,[playerDigging]);
+    connection.notify(blockChange)
+  },
+  0x21: (connection, packet) => {
+    connection.player.handleHotbarChange(Packet.read(ChangeHeldItem,packet))
+  },
+  0x24: (connection, packet) => {
+    connection.player.handleWindowClick(Packet.read(CreativeClickWindow,packet))
+  }
 }
 
 function handleLocalPlayPacket(connection, packet) {
-  switch(packet.packetID) {
-    case 0x08:
-      clickWindow(packet)
-      break;
-    case 0x10:
-    case 0x11:
-    case 0x12:
-      connection.notify(Packet.write(RelativeEntityMove,[connection.player]))
-      connection.notify(Packet.write(EntityHeadMove,[connection.player]))
-      break;
-    case 0x18:
-      connection.notify(playerDigging(packet))
-      break;
-    case 0x21:
-      connection.player.handleHotbarChange(Packet.read(ChangeHeldItem,packet))
-      break;
-    case 0x24:
-      connection.player.handleWindowClick(Packet.read(CreativeClickWindow,packet))
-      break;
+  if(reactions[packet.packetID.toString()]) {
+    reactions[packet.packetID.toString()](connection, packet)
   }
 }
 

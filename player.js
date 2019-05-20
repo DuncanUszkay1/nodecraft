@@ -4,11 +4,11 @@ const log = require('loglevel')
 const Inventory = require('./player/inventory.js')
 const Item = require('./player/item.js')
 
-var spawnX = 8
-var spawnY = 16
-var spawnZ = 3
-var spawnPitch = 64
-var spawnYaw = 64
+const spawnX = 8
+const spawnY = 16
+const spawnZ = 3
+const spawnPitch = 64
+const spawnYaw = 64
 
 class Player {
   constructor(username, socket) {

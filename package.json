@@ -6,7 +6,7 @@
   "dependencies": {
     "int64-buffer": "^0.99.1007",
     "loglevel": "^1.6.1",
-    "uuid": "^3.3.2",
+    "uuid": "^14.0.0",
     "uuid-parse": "^1.1.0"
   },
   "devDependencies": {
